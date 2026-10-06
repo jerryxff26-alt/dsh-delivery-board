@@ -40,8 +40,8 @@ export const Config = z.object({
 const textOutput = {
   schema: {
     type: 'object',
-    properties: { text: { type: 'string' } },
-    required: ['text'],
+    properties: { text: { type: 'string', required: true } },
+    additionalProperties: false,
   },
   render: (_args, value) => value.text,
 }
@@ -76,29 +76,25 @@ export function apply(ctx, config) {
       name: 'delivery_init',
       description: 'Initialize a client delivery project: customer + pipeline template (default / governance) or custom stages',
       parameters: {
-        type: 'object',
-        properties: {
-          customer: { type: 'string', description: 'Customer name' },
-          template: {
-            type: 'string',
-            enum: Object.keys(TEMPLATES),
-            description: 'Pipeline template: default = ToB delivery pipeline, governance = governance governance pipeline',
-          },
-          stages: {
-            type: 'array',
-            description: 'Custom stages (optional; overrides the template when provided)',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string', description: 'Stage name' },
-                role: { type: 'string', description: 'Owning role' },
-                gates: { type: 'array', items: { type: 'string' }, description: 'Governance gate checklist' },
-              },
-              required: ['name'],
+        customer: { type: 'string', description: 'Customer name', required: true },
+        template: {
+          type: 'string',
+          enum: Object.keys(TEMPLATES),
+          description: 'Pipeline template: default = ToB delivery pipeline, governance = governance governance pipeline',
+        },
+        stages: {
+          type: 'array',
+          description: 'Custom stages (optional; overrides the template when provided)',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', description: 'Stage name', required: true },
+              role: { type: 'string', description: 'Owning role' },
+              gates: { type: 'array', items: { type: 'string' }, description: 'Governance gate checklist' },
             },
+            additionalProperties: false,
           },
         },
-        required: ['customer'],
       },
       output: textOutput,
       isConcurrencySafe: () => false,
@@ -123,16 +119,12 @@ export function apply(ctx, config) {
       name: 'delivery_card',
       description: 'Add a work card: title, stage, owner, due date, acceptance criteria, DoD',
       parameters: {
-        type: 'object',
-        properties: {
-          title: { type: 'string', description: 'Card title' },
-          stage: { type: 'string', description: 'Stage id' },
-          owner: { type: 'string', description: 'Owner (optional)' },
-          due: { type: 'string', description: 'Due date YYYY-MM-DD (optional)' },
-          acceptance: { type: 'array', items: { type: 'string' }, description: 'Acceptance criteria (optional)' },
-          dod: { type: 'array', items: { type: 'string' }, description: 'Definition of Done (optional)' },
-        },
-        required: ['title', 'stage'],
+        title: { type: 'string', description: 'Card title', required: true },
+        stage: { type: 'string', description: 'Stage id', required: true },
+        owner: { type: 'string', description: 'Owner (optional)' },
+        due: { type: 'string', description: 'Due date YYYY-MM-DD (optional)' },
+        acceptance: { type: 'array', items: { type: 'string' }, description: 'Acceptance criteria (optional)' },
+        dod: { type: 'array', items: { type: 'string' }, description: 'Definition of Done (optional)' },
       },
       output: textOutput,
       isConcurrencySafe: () => false,
@@ -158,14 +150,10 @@ export function apply(ctx, config) {
       name: 'delivery_move',
       description: 'Hand a card to another stage (records a handoff audit log; owner can change)',
       parameters: {
-        type: 'object',
-        properties: {
-          card_id: { type: 'string', description: 'Card id (e.g. c1)' },
-          to_stage: { type: 'string', description: 'Target stage id' },
-          owner: { type: 'string', description: 'New owner after handoff (optional)' },
-          note: { type: 'string', description: 'Handoff note (optional)' },
-        },
-        required: ['card_id', 'to_stage'],
+        card_id: { type: 'string', description: 'Card id (e.g. c1)', required: true },
+        to_stage: { type: 'string', description: 'Target stage id', required: true },
+        owner: { type: 'string', description: 'New owner after handoff (optional)' },
+        note: { type: 'string', description: 'Handoff note (optional)' },
       },
       output: textOutput,
       isConcurrencySafe: () => false,
@@ -188,7 +176,7 @@ export function apply(ctx, config) {
     defineTool({
       name: 'delivery_board',
       description: 'Quick text board: cards per stage + gates + open risks',
-      parameters: { type: 'object', properties: {} },
+      parameters: {},
       output: textOutput,
       isConcurrencySafe: () => true,
       async execute(_args, exec) {
@@ -203,10 +191,7 @@ export function apply(ctx, config) {
       name: 'delivery_board_html',
       description: 'Generate a pretty standalone HTML kanban board (open in a browser, share with the team)',
       parameters: {
-        type: 'object',
-        properties: {
-          output: { type: 'string', description: 'Output filename (optional, defaults to delivery-board.html)' },
-        },
+        output: { type: 'string', description: 'Output filename (optional, defaults to delivery-board.html)' },
       },
       output: textOutput,
       isConcurrencySafe: () => false,
@@ -229,13 +214,9 @@ export function apply(ctx, config) {
       name: 'delivery_log',
       description: 'Log an update: progress / risk / blocker / decision',
       parameters: {
-        type: 'object',
-        properties: {
-          type: { type: 'string', enum: LOG_TYPES, description: 'Update type' },
-          text: { type: 'string', description: 'Content' },
-          card_id: { type: 'string', description: 'Related card id (optional)' },
-        },
-        required: ['type', 'text'],
+        type: { type: 'string', enum: LOG_TYPES, description: 'Update type', required: true },
+        text: { type: 'string', description: 'Content', required: true },
+        card_id: { type: 'string', description: 'Related card id (optional)' },
       },
       output: textOutput,
       isConcurrencySafe: () => false,
@@ -257,10 +238,7 @@ export function apply(ctx, config) {
       name: 'delivery_weekly',
       description: 'Draft the client weekly report (Markdown): pipeline progress, handoffs, risks, next week',
       parameters: {
-        type: 'object',
-        properties: {
-          week_label: { type: 'string', description: 'Week label (optional, e.g. "Week of Oct 12")' },
-        },
+        week_label: { type: 'string', description: 'Week label (optional, e.g. "Week of Oct 12")' },
       },
       output: textOutput,
       isConcurrencySafe: () => true,
