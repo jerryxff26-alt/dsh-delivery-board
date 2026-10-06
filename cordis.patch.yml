@@ -1,0 +1,7 @@
+# dsh-delivery-board's cordis patch layer: inserts the delivery-board plugin row into the profile
+- insert:
+    - id: delivery-board
+      name: dsh-delivery-board
+      config:
+        fileName: delivery.json
+        boardFile: delivery-board.html
