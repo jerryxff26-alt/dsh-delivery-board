@@ -36,8 +36,8 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 - **阶段流水线 + 卡片**：每张卡有负责人、截止日期、验收标准和完成定义（DoD）。
 - **交接审计**：卡片跨阶段移动时自动记录交接（谁、从哪到哪、备注）。
-- **周报**：生成 Markdown 客户周报：流水线快照、本周交接、未关闭的风险/阻塞。
-- **本地可编辑看板**：`/delivery open` 在 `127.0.0.1` 上提供鼠标拖拽看板（拖到其他阶段列即可移动），保存回同一份交付状态；归档/恢复保留历史。无障碍回退：编辑卡片里的 Stage。
+- **周报**：生成 Markdown 客户周报：流水线快照、本周交接、累计的风险/阻塞日志（暂不记录关闭状态）。
+- **本地可编辑看板**：`/delivery Open the editable board` 在 `127.0.0.1` 上提供鼠标拖拽看板（拖到其他阶段列即可移动），保存回同一份交付状态；归档/恢复保留历史。无障碍回退：编辑卡片里的 Stage。
 - **离线 HTML 快照**：单个只读文件，没装 DSH 的同事也能打开。
 
 ![宽屏完整治理流水线看板（Plan→Live，虚构 ACME 卡片）](docs/screenshots/board.jpg)
@@ -55,23 +55,36 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 ## 使用
 
-在 DSH 输入框输入 `/delivery` 直接执行命令（不调用模型）：
+### 模型驱动的 Skill（常规入口）
+
+插件内置并自动注册 `delivery` skill，不需要另行复制或安装。输入 `/delivery` 加自然语言目标，由 DSH 加载提示词并交给模型分析，而不是按 JSON 命令直接执行。
 
 ```text
-/delivery help
-/delivery init {"customer":"Demo","template":"governance"}
-/delivery card {"title":"API 联调","stage":"build","owner":"Alice"}
-/delivery board
-/delivery open
-/delivery move c1 test
-/delivery update {"card_id":"c1","owner":"Bob","due":"2026-10-20"}
-/delivery archive c1
-/delivery restore c1
-/delivery weekly 2026-10-05
-/delivery html
+/delivery Review this repository and propose a delivery plan for ACME from its requirements and tests.
+/delivery Create the cards from the approved plan; leave unknown owners and dates unset.
+/delivery Hand off the API integration card to Test and summarize the available evidence.
+/delivery Open the editable board.
+/delivery Prepare the client weekly report for the week starting 2026-10-05.
 ```
 
-也可以直接用自然语言，例如「给 ACME 建一个交付项目，用 governance 模板」「把 c1 交给设计，负责人改为 Dave」「生成本周客户周报」。
+Skill 从需求、代码和测试证据生成计划、卡片内容、验收标准与 DoD；批量创建前先确认方案。原有 `delivery_*` 工具负责校验、保存、审计和渲染：**模型负责推理，工具负责落盘**。`delivery_init` 本身仍然是确定性初始化，后续卡片由 Skill 编排工具创建。不直接改写 JSON，也不改变已有数据格式。
+
+### 高级直接操作（不调用模型）
+
+原来的原生命令改名为 `/delivery-admin`，避免抢占 Skill 的 `/delivery` 入口。已有直接命令和脚本只需更换前缀；数据无需迁移。
+
+```text
+/delivery-admin help
+/delivery-admin init {"customer":"Demo","template":"governance"}
+/delivery-admin board
+/delivery-admin open
+/delivery-admin move c1 test
+/delivery-admin archive c1
+/delivery-admin restore c1
+/delivery-admin html
+```
+
+本地链接开发更新后，完整退出并重新打开 DSH，确认插件为 **Running**。需要 DSH 的 `skills` 服务与 `tool-skill` 加载器；已安装的 0.2.0-rc.2 SDK 支持这些接口。`/delivery` 对应 Skill，`/delivery-admin` 对应确定性命令。
 
 ## 流水线模板
 

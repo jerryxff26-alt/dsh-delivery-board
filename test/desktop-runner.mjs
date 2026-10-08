@@ -8,7 +8,7 @@ if (!existsSync(executable)) throw new Error('DSH desktop not found. Set DSH_DES
 const runtime = join(app, 'Contents/Resources/app.asar/dsh')
 const result = spawnSync(executable, [
   '--expose-internals', '--import', join(import.meta.dirname, 'desktop-sdk-hook.mjs'),
-  '--test', join(import.meta.dirname, 'plugin.test.mjs'),
+  '--test', join(import.meta.dirname, 'plugin.test.mjs'), join(import.meta.dirname, 'skill-desktop.test.mjs'),
 ], {
   stdio: 'inherit',
   env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', DSH_DESKTOP_RUNTIME: runtime },

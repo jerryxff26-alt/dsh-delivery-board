@@ -7,7 +7,7 @@
 
 From Plan through requirements, design, build, test, and go-live, if delivery state is not alongside the code, people and agents struggle to stay aligned: who owns what, what “done” means, and where work is stuck often live only in handoffs and verbal sync.
 
-**dsh-delivery-board** is a [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) plugin that writes the stage pipeline, handoff trail, and client weekly report into in-repo delivery state. The board, audit, and weekly report are projections of that same state — not a separate service.
+**dsh-delivery-board** is a skill-backed [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) plugin that writes the stage pipeline, handoff trail, and client weekly report into in-repo delivery state. The board, audit, and weekly report are projections of that same state — not a separate service.
 
 The goal is clear: run the full delivery lifecycle from the codebase, so PMs, engineers, QA, and AI agents share one Source of Truth.
 
@@ -23,7 +23,7 @@ Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
 
 ![Synthetic demo: pain → stage board → handoff audit → weekly HTML → install](docs/demo/demo.gif)
 
-*~19s silent walkthrough (English overlays · synthetic data). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
+*~19s silent walkthrough of board/report views (English overlays · synthetic data), not a model-led planning recording. [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
 
 ## Design principles
 
@@ -36,8 +36,8 @@ Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
 
 - **Stage pipeline + cards** — each card has an owner, due date, acceptance criteria and Definition of Done (DoD).
 - **Handoff audit trail** — moving a card to another stage records who handed what to whom, automatically.
-- **Weekly report** — a Markdown client report: pipeline snapshot, this week's handoffs, open risks/blockers.
-- **Local editable board** — `/delivery open` serves a mouse drag-and-drop board on `127.0.0.1` that saves back to the same delivery state. Archive/restore keeps history. Accessibility fallback: Edit → Stage.
+- **Weekly report** — a Markdown client report: pipeline snapshot, this week's handoffs, and cumulative risk/blocker logs (no resolution status yet).
+- **Local editable board** — ask `/delivery Open the editable board`; the tool serves a mouse drag-and-drop board on `127.0.0.1` that saves back to the same delivery state. Archive/restore keeps history. Accessibility fallback: Edit → Stage.
 - **Offline HTML snapshot** — a single read-only file teammates without DSH can open.
 
 ![Full-width editable delivery board showing all governance stages Plan→Live with synthetic ACME cards](docs/screenshots/board.jpg)
@@ -55,35 +55,48 @@ Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
 
 ## Usage
 
-Type `/delivery` in DSH to run commands directly (no model call). `delivery_board` etc. are the model-facing tool names; the slash command is `/delivery`.
+### Model-led skill (normal workflow)
+
+The plugin bundles and registers a **`delivery` skill**. Type `/delivery` followed by the outcome you want; DSH loads its instructions into the model instead of parsing a direct command. No separate skill copy/install is needed. Plain-language requests can also discover the skill through DSH's skill catalog.
 
 ```text
-/delivery help
-/delivery init {"customer":"Demo","template":"governance"}
-/delivery card {"title":"API integration","stage":"build","owner":"Alice"}
-/delivery board
-/delivery open
-/delivery move c1 test
-/delivery update {"card_id":"c1","owner":"Bob","due":"2026-10-20"}
-/delivery archive c1
-/delivery restore c1
-/delivery weekly 2026-10-05
-/delivery html
+/delivery Review this repository and propose a delivery plan for ACME from its requirements and tests.
+/delivery Create the cards from the approved plan; leave unknown owners and dates unset.
+/delivery Hand off the API integration card to Test, assign Morgan, and summarize the available evidence.
+/delivery Open the editable board.
+/delivery Prepare the client weekly report for the week starting 2026-10-05.
 ```
 
-`/delivery board --archived` includes archived cards. `init`, `card`, `update` and `log` take JSON objects; `move` also accepts JSON for owner changes and handoff notes.
+The skill reads relevant repository context, identifies gaps, and generates stages, card content, acceptance criteria and DoD. It proposes a substantial plan before bulk creation. The existing `delivery_*` tools then validate inputs, save state, record handoffs and render views. **The model reasons; the tools persist.** `delivery_init` itself still creates an empty project deterministically; the skill orchestrates card creation after plan approval.
 
-Or just ask in plain language:
+This is a **skill backed by the existing plugin**, not a prompt that edits JSON directly. The JSON schema, board UI and model-facing tool names are unchanged. Project-local skills can override the packaged skill using DSH's normal skill precedence.
 
-- "Set up a delivery project for ACME with the governance template" → `delivery_init`
-- "Add a card in Analyze: SSO login, acceptance criteria: SSO supported, owner: Carol" → `delivery_card`
-- "Hand off c1 to Design, new owner: Dave" → `delivery_move` (records a handoff)
-- "Show the delivery board" → `delivery_board`
-- "Open the editable board" → `delivery_open`
-- "Generate the HTML board" → `delivery_board_html`
-- "Generate the client weekly report" → `delivery_weekly`
+### Advanced direct controls (no model call)
 
-`delivery_init` does not call a model: it copies a template (or your custom `stages`), validates it and creates an empty project.
+The former native `/delivery` command is now **`/delivery-admin`**, so it cannot intercept skill prompts. Existing direct command examples or scripts must change their prefix; delivery data does not need migration.
+
+<details>
+<summary>Show deterministic command syntax</summary>
+
+```text
+/delivery-admin help
+/delivery-admin init {"customer":"Demo","template":"governance"}
+/delivery-admin card {"title":"API integration","stage":"build","owner":"Alice"}
+/delivery-admin board
+/delivery-admin open
+/delivery-admin move c1 test
+/delivery-admin update {"card_id":"c1","owner":"Bob","due":"2026-10-20"}
+/delivery-admin archive c1
+/delivery-admin restore c1
+/delivery-admin weekly 2026-10-05
+/delivery-admin html
+```
+
+`board --archived` includes archived cards. `init`, `card`, `update` and `log` take JSON objects; `move` also accepts JSON for owner changes and handoff notes. These advanced commands still delegate to the same validated tools.
+
+</details>
+
+For linked desktop development, fully quit and reopen DSH after updating the plugin. It needs DSH's `skills` service and `tool-skill` loader (supported by the tested 0.2.0-rc.2 runtime). Confirm the plugin shows **Running**. `/delivery <request>` is handled as a skill; `/delivery-admin` uses the direct command handler.
 
 ## Pipeline templates
 
@@ -112,10 +125,10 @@ Fully custom stages are supported via the `stages` parameter. Gates are display-
 
 ## Editable local board vs offline HTML
 
-- `/delivery open` returns a URL. **Drag cards** between stage columns to move them (primary UX); use **Edit → Stage** as the accessibility fallback. Create/edit cards, archive/restore. Saves go to the same in-repo delivery state and audit history.
+- `delivery_open` (via the skill, or `/delivery-admin open`) returns a URL. **Drag cards** between stage columns to move them (primary UX); use **Edit → Stage** as the accessibility fallback. Create/edit cards, archive/restore. Saves go to the same in-repo delivery state and audit history.
 - The live server starts on demand, binds only to `127.0.0.1` on an ephemeral port and uses an unguessable capability path. Treat the URL as private to your machine; it expires when the plugin unloads or DSH exits.
 - If another tab, command or external edit changes the state file, a stale page cannot silently overwrite it: press **Refresh** and retry (conflict protection, not live sync).
-- `/delivery html` writes a read-only `.html`/`.htm` file with search, owner filter and archive view; it cannot overwrite the data file.
+- `/delivery-admin html` writes a read-only `.html`/`.htm` file with search, owner filter and archive view; it cannot overwrite the data file.
 
 ## Team collaboration
 
@@ -126,8 +139,8 @@ Commit `delivery.json` (the on-disk delivery state) to the team's shared git rep
 ```bash
 npm install
 npm run check
-npm test               # domain, HTML, commands, storage, HTTP and plugin tests (real SDK from npm)
-npm run test:desktop   # optional: runs plugin tests against an installed macOS desktop app's SDK
+npm test               # domain, HTML, commands, storage, HTTP, plugin and skill tests (real SDK from npm)
+npm run test:desktop   # optional: plugin tests plus real skill registry/loader/routing tests from the installed macOS SDK
 ```
 
 Local desktop development (macOS, tested with DSH 0.2.0-rc.2):
@@ -141,7 +154,7 @@ Fully quit and reopen DSH after installing or changing a linked plugin, then che
 
 Implementation notes:
 
-- Plugin contract `name / inject / Config / apply`; tools via `defineTool`. Tool output renderers return `ContentBlock[]`.
+- Plugin contract `name / inject / Config / apply`; tools via `defineTool`; the bundled `skills/delivery/SKILL.md` is registered through `ctx.skills.register`. Tool output renderers return `ContentBlock[]`.
 - Domain logic (`lib/delivery.js`) and the HTML renderer (`lib/board-html.js`) are pure functions; all writes go through `lib/store.js` and `ctx.fs`.
 - Weekly handoffs cover seven local-calendar days starting at `week_start` (default: Monday of the current week). Risks/blockers are cumulative (no resolution status yet).
 - User content in HTML is escaped (covered by tests).

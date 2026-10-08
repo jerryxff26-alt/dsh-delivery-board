@@ -1,4 +1,4 @@
-// Browser regression harness only. Production /delivery open uses ctx.fs from
+// Browser regression harness only. Production /delivery-admin open uses ctx.fs from
 // DSH; this adapter writes synthetic test files and is not the plugin backend.
 import fs from 'node:fs/promises'
 import { resolve, dirname, join } from 'node:path'

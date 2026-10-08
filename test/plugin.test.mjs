@@ -8,10 +8,12 @@ function fixture() {
   const tools = new Map()
   const writes = []
   const commands = new Map()
+  const skills = new Map()
   const signal = new AbortController().signal
   const exec = { agent: { session: { header: { cwd: '/workspace' } } }, signal }
   const ctx = {
     systemPrompt: { section() {} },
+    skills: { register(skill) { skills.set(skill.name, skill) } },
     commands: { register(command) { commands.set(command.name, command) } },
     tools: { register(tool) { tools.set(tool.name, tool) } },
     emit() {},
@@ -26,7 +28,7 @@ function fixture() {
     },
   }
   apply(ctx, { fileName: 'delivery.json', boardFile: 'delivery-board.html' })
-  return { tools, commands, exec, files, writes, signal }
+  return { tools, commands, skills, exec, files, writes, signal }
 }
 
 test('all eleven tools render desktop-compatible text content blocks', () => {
@@ -83,12 +85,12 @@ test('desktop weekly tool honors an explicit reporting period and rejects invali
 })
 
 
-test('native /delivery command shares tool validation and performs direct mutations', async () => {
+test('native /delivery-admin command shares tool validation and performs direct mutations', async () => {
   const { commands, exec, files } = fixture()
-  const command = commands.get('delivery')
-  assert.ok(command.description.includes('不调用模型'))
+  const command = commands.get('delivery-admin')
+  assert.ok(command.description.includes('without the model'))
   const invoke = (rawInput) => command.handler({ ...exec, rawInput })
-  assert.match((await invoke('')).text, /\/delivery open/)
+  assert.match((await invoke('')).text, /\/delivery-admin open/)
   assert.equal((await invoke('init {}')).kind, 'error')
   assert.equal(files.size, 0)
   assert.equal((await invoke('init {"customer":"Direct","template":"governance"}')).kind, 'success')
@@ -134,7 +136,7 @@ test('same-stage slash moves are no-ops, not errors or unrelated handoff message
     if (withLog) await tools.get('delivery_log').execute({ type: 'decision', text: 'Unrelated update' }, exec)
     const original = files.get('/workspace/delivery.json')
     const count = writes.length
-    const result = await commands.get('delivery').handler(invocation)
+    const result = await commands.get('delivery-admin').handler(invocation)
     assert.equal(result.kind, 'success')
     assert.match(result.text, /No changes: c1 is already in build/)
     assert.doesNotMatch(result.text, /Handed off|Unrelated update/)
@@ -153,4 +155,17 @@ test('same-stage owner change via delivery_move is not reported as a handoff', a
   assert.equal(state.cards[0].owner, 'tester-b')
   assert.equal(state.logs.filter((entry) => entry.type === 'handoff').length, 0)
   assert.doesNotMatch((await tools.get('delivery_weekly').execute({}, exec)).text, /Development → Development/)
+})
+
+
+test('delivery is a model/user skill, not a native command that intercepts prompts', () => {
+  const { skills, commands } = fixture()
+  assert.equal(commands.has('delivery'), false)
+  assert.equal(commands.has('delivery-admin'), true)
+  assert.equal(skills.size, 1)
+  const skill = skills.get('delivery')
+  assert.deepEqual(skill.invocation, { modelInvocable: true, userInvocable: true })
+  assert.match(skill.content, /Plan before bulk creation/)
+  assert.match(skill.content, /delivery_card/)
+  assert.match(skill.description, /repository requirements/)
 })

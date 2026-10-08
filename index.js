@@ -25,10 +25,11 @@ import { readState, initializeState, mutateState, resolveTarget } from './lib/st
 import { applyAction } from './lib/actions.js'
 import { createBoardManager } from './lib/board-server.js'
 import { registerDeliveryCommand } from './lib/commands.js'
+import { loadDeliverySkill } from './lib/skill.js'
 
 export const name = 'delivery-board'
 
-export const inject = ['tools', 'fs', 'systemPrompt', 'commands']
+export const inject = ['tools', 'fs', 'systemPrompt', 'commands', 'skills']
 
 export const Config = z.object({
   fileName: z.string().default('delivery.json'),
@@ -59,19 +60,15 @@ export function apply(ctx, config) {
   const registered = new Map()
   const register = (tool) => { registered.set(tool.name, tool); ctx.tools.register(tool) }
   const boards = createBoardManager(ctx, config)
+  ctx.skills.register(loadDeliverySkill())
   ctx.systemPrompt.section({
     name: 'delivery-board',
     order: 100,
     text: [
-      'ToB delivery collaboration plugin (dsh-delivery-board) — the team\'s shared delivery board.',
-      'Templates: "default" (Client Requirements → BA Analysis → TL Design → Development → Testing → DevSecOps Launch → Live) or "governance" (governance-style pipeline: Plan → Analyze → Design → Build → Test → Deploy, each stage with quality/risk/security gates).',
-      'Use delivery_init once per project. Use delivery_card to add work cards (with acceptance criteria + DoD).',
-      'Use delivery_move to hand cards across stages (owner can change; a handoff audit log is recorded automatically).',
-      'Use delivery_board for a quick text board; delivery_open for the interactive local board (drag, edit, archive and restore save to the same JSON). delivery_board_html exports a read-only offline snapshot.',
-      'Use delivery_update to edit card metadata, delivery_archive to hide completed cards without deleting history, and delivery_restore to return them. Archived cards must be restored before moving or editing.',
-      'For direct human controls use /delivery help; slash commands run without creating model messages. Natural language remains useful for planning and generating custom stages, acceptance criteria and DoD.',
-      'Use delivery_log for progress/risks/blockers/decisions; delivery_weekly for the client report (week_start selects seven days; week_label is only a title).',
-      `State lives in ${config.fileName} at the session workspace root — keep it in the team's shared git repo so everyone sees the same board.`,
+      'Codebase-native delivery: use the delivery skill for repository-grounded planning, acceptance criteria, handoffs and reporting.',
+      'The /delivery skill is model-led. Load it before delivery task actions when it is available in the skill catalog; explicit /delivery invocations already include its instructions.',
+      'Use the delivery_* tools to read and mutate shared state. /delivery-admin help is the advanced, deterministic command escape hatch, not the normal skill workflow.',
+      `State lives in ${config.fileName} at the session workspace root. ${config.boardFile} is a read-only export; delivery_open returns the editable machine-local board URL.`,
     ].join('\n'),
   })
 
