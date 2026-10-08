@@ -2,9 +2,14 @@
 
 [English](README.md) · [中文](README.zh.md)
 
-Work gets handed from analysis to design to development to QA, and context gets lost at every handoff: who owns it now, what "done" means, what is still blocked. Then every Friday someone copies the client weekly report together by hand.
+> **Codebase-native delivery context.**  
+> Delivery state lives with the source: humans and models share one context.
 
-**dsh-delivery-board** is a [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) plugin that keeps the delivery board, the handoff trail and the weekly report in one `delivery.json` inside your repo.
+From Plan through requirements, design, build, test, and go-live, if delivery state is not alongside the code, people and agents struggle to stay aligned: who owns what, what “done” means, and where work is stuck often live only in handoffs and verbal sync.
+
+**dsh-delivery-board** is a [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) plugin that writes the stage pipeline, handoff trail, and client weekly report into in-repo delivery state. The board, audit, and weekly report are projections of that same state — not a separate service.
+
+The goal is clear: run the full delivery lifecycle from the codebase, so PMs, engineers, QA, and AI agents share one Source of Truth.
 
 ```bash
 dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
@@ -18,14 +23,21 @@ Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
 
 ![Synthetic demo: pain → stage board → handoff audit → weekly HTML → install](docs/demo/demo.gif)
 
-*~19s silent walkthrough (English overlays · synthetic ACME: pain → one delivery.json board → editor → handoff audit → weekly HTML → install). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
+*~19s silent walkthrough (English overlays · synthetic data). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
+
+## Design principles
+
+- **Delivery state is a first-class citizen** — stages, owners, acceptance criteria (AC), Definition of Done (DoD), handoffs, and blockers live in the repo and evolve with Git.
+- **Views are projections** — the local board, handoff audit, client weekly report, and offline HTML are all projections of the same delivery state.
+- **Operate through DSH** — advance stages, fill in AC, log blockers, and generate weekly reports with `/delivery` or plain language; you do not treat JSON as the day-to-day editing UI.
+- **Clear boundaries** — this is not a rebuild of an enterprise project-management platform; it keeps in the codebase only the delivery context the current repo actually needs.
 
 ## What you get
 
 - **Stage pipeline + cards** — each card has an owner, due date, acceptance criteria and Definition of Done (DoD).
 - **Handoff audit trail** — moving a card to another stage records who handed what to whom, automatically.
 - **Weekly report** — a Markdown client report: pipeline snapshot, this week's handoffs, open risks/blockers.
-- **Local editable board** — `/delivery open` serves a mouse drag-and-drop board on `127.0.0.1` that saves back to the same JSON. Archive/restore keeps history.
+- **Local editable board** — `/delivery open` serves a mouse drag-and-drop board on `127.0.0.1` that saves back to the same delivery state. Archive/restore keeps history. Accessibility fallback: Edit → Stage.
 - **Offline HTML snapshot** — a single read-only file teammates without DSH can open.
 
 ![Full-width editable delivery board showing all governance stages Plan→Live with synthetic ACME cards](docs/screenshots/board.jpg)
@@ -100,14 +112,14 @@ Fully custom stages are supported via the `stages` parameter. Gates are display-
 
 ## Editable local board vs offline HTML
 
-- `/delivery open` returns a URL. **Drag cards** between stage columns to move them (primary UX); use **Edit → Stage** as the accessibility fallback. Create/edit cards, archive/restore. Saves go to the same workspace JSON and audit history.
+- `/delivery open` returns a URL. **Drag cards** between stage columns to move them (primary UX); use **Edit → Stage** as the accessibility fallback. Create/edit cards, archive/restore. Saves go to the same in-repo delivery state and audit history.
 - The live server starts on demand, binds only to `127.0.0.1` on an ephemeral port and uses an unguessable capability path. Treat the URL as private to your machine; it expires when the plugin unloads or DSH exits.
-- If another tab, command or external edit changes the JSON, a stale page cannot silently overwrite it: press **Refresh** and retry (conflict protection, not live sync).
+- If another tab, command or external edit changes the state file, a stale page cannot silently overwrite it: press **Refresh** and retry (conflict protection, not live sync).
 - `/delivery html` writes a read-only `.html`/`.htm` file with search, owner filter and archive view; it cannot overwrite the data file.
 
 ## Team collaboration
 
-Commit `delivery.json` to the team's shared git repo; `git pull`/`push` is the sync. Concurrent edits still need normal Git conflict review. Each stage renders up to 30 cards initially with **Load more**; search and owner filters cover the whole file.
+Commit `delivery.json` (the on-disk delivery state) to the team's shared git repo; `git pull`/`push` is the sync. Concurrent edits still need normal Git conflict review. Each stage renders up to 30 cards initially with **Load more**; search and owner filters cover the whole file.
 
 ## Development
 
@@ -143,7 +155,7 @@ Implementation notes:
 ## Known limitations
 
 - DSH is a developer preview. Peer range: `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`, `@deepseek-ai/schemastery ~3.18.4`; only 0.2.0-rc.2 has been tested.
-- No Gantt scheduling, Jira/Trello integration, automatic bulk archive, enforced gates or realtime multi-user sync.
+- No Gantt scheduling, automatic bulk archive, enforced gates or realtime multi-user sync.
 - Drag/drop (and Edit → Stage fallback) are checked in a local browser harness; no full keyboard/mobile/WCAG claim.
 
 ## License
