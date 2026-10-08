@@ -18,7 +18,7 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 ![虚构演示：问题 → 阶段看板 → 交接审计 → 周报/HTML → 安装](docs/demo/demo.gif)
 
-*约 22 秒无声说明（虚构 ACME：痛点 → 完整看板 → 编辑 → 交接/归档 → 周报 → 安装）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
+*约 31 秒无声说明（虚构 ACME：痛点 → 完整看板 → 拖拽换阶段 → 编辑 → 交接/归档 → 周报 → 安装）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
 
 
 ## 功能
@@ -26,12 +26,12 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 - **阶段流水线 + 卡片**：每张卡有负责人、截止日期、验收标准和完成定义（DoD）。
 - **交接审计**：卡片跨阶段移动时自动记录交接（谁、从哪到哪、备注）。
 - **周报**：生成 Markdown 客户周报：流水线快照、本周交接、未关闭的风险/阻塞。
-- **本地可编辑看板**：`/delivery open` 在 `127.0.0.1` 上提供拖拽看板，保存回同一个 JSON；归档/恢复保留历史。
+- **本地可编辑看板**：`/delivery open` 在 `127.0.0.1` 上提供鼠标拖拽看板（拖到其他阶段列即可移动），保存回同一个 JSON；归档/恢复保留历史。无障碍回退：编辑卡片里的 Stage。
 - **离线 HTML 快照**：单个只读文件，没装 DSH 的同事也能打开。
 
 ![宽屏完整治理流水线看板（Plan→Live，虚构 ACME 卡片）](docs/screenshots/board.jpg)
 
-*截图在宽视口下截取（阶段列完整入镜），来自本地回环夹具上的虚构 ACME 看板。*
+*截图在普通笔记本视口（约 1440×900）下截取：列更紧凑，Plan→Live 尽量一屏可见、无需横向滚动。*
 
 ## 使用
 

@@ -18,7 +18,7 @@ Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
 
 ![Synthetic demo: problem → stage board → handoff audit → weekly report / HTML → install](docs/demo/demo.gif)
 
-*~22s silent walkthrough (synthetic ACME demo: pain → full board → editor → handoff/archive → weekly → install). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
+*~31s silent walkthrough (synthetic ACME demo: pain → full board → drag between stages → editor → handoff/archive → weekly → install). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
 
 
 ## What you get
@@ -26,7 +26,7 @@ Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
 - **Stage pipeline + cards** — each card has an owner, due date, acceptance criteria and Definition of Done (DoD).
 - **Handoff audit trail** — moving a card to another stage records who handed what to whom, automatically.
 - **Weekly report** — a Markdown client report: pipeline snapshot, this week's handoffs, open risks/blockers.
-- **Local editable board** — `/delivery open` serves a drag-and-drop board on `127.0.0.1` that saves back to the same JSON. Archive/restore keeps history.
+- **Local editable board** — `/delivery open` serves a mouse drag-and-drop board on `127.0.0.1` that saves back to the same JSON. Archive/restore keeps history.
 - **Offline HTML snapshot** — a single read-only file teammates without DSH can open.
 
 ![Full-width editable delivery board showing all governance stages Plan→Live with synthetic ACME cards](docs/screenshots/board.jpg)
@@ -40,7 +40,7 @@ Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
 
 </details>
 
-*Screenshots captured at a wide viewport (full stage columns in frame) from a synthetic ACME board served by the local loopback fixture.*
+*Screenshots captured at a normal laptop viewport (~1440×900) from a synthetic ACME board: denser columns so Plan→Live fit without horizontal scroll when possible.*
 
 ## Usage
 
@@ -101,7 +101,7 @@ Fully custom stages are supported via the `stages` parameter. Gates are display-
 
 ## Editable local board vs offline HTML
 
-- `/delivery open` returns a URL. Drag cards between stages (or use the stage dropdown), create/edit cards, archive/restore. Saves go to the same workspace JSON and audit history.
+- `/delivery open` returns a URL. **Drag cards** between stage columns to move them (primary UX); use **Edit → Stage** as the accessibility fallback. Create/edit cards, archive/restore. Saves go to the same workspace JSON and audit history.
 - The live server starts on demand, binds only to `127.0.0.1` on an ephemeral port and uses an unguessable capability path. Treat the URL as private to your machine; it expires when the plugin unloads or DSH exits.
 - If another tab, command or external edit changes the JSON, a stale page cannot silently overwrite it: press **Refresh** and retry (conflict protection, not live sync).
 - `/delivery html` writes a read-only `.html`/`.htm` file with search, owner filter and archive view; it cannot overwrite the data file.
@@ -145,7 +145,7 @@ Implementation notes:
 
 - DSH is a developer preview. Peer range: `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`, `@deepseek-ai/schemastery ~3.18.4`; only 0.2.0-rc.2 has been tested.
 - No Gantt scheduling, Jira/Trello integration, automatic bulk archive, enforced gates or realtime multi-user sync.
-- Drag/drop and dropdown controls are checked in a local browser harness; no full keyboard/mobile/WCAG claim.
+- Drag/drop (and Edit → Stage fallback) are checked in a local browser harness; no full keyboard/mobile/WCAG claim.
 
 ## License
 

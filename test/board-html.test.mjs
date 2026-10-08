@@ -57,15 +57,34 @@ test('renderBoardHtml handles empty projects', () => {
   assert.ok(!html.includes('Open risks'))
 })
 
-test('offline snapshots are visibly read-only and live boards have accessible move and edit controls', () => {
+test('offline snapshots are visibly read-only and live boards prioritize drag over card-face stage selects', () => {
   const state = sampleState()
   assert.match(renderBoardHtml(state), /Read-only HTML snapshot/)
   assert.match(renderBoardHtml(state), /draggable="false"/)
   const live = renderBoardHtml(state, { endpoint: '/board/test', revision: 'revision' })
   assert.match(live, /draggable="true"/)
-  assert.match(live, /aria-label="Move c1 to stage"/)
   assert.match(live, /aria-label="Edit c1"/)
   assert.match(live, /aria-live="polite"/)
+  assert.match(live, /Drag to move/)
+  assert.match(live, /Board drag-and-drop/)
+  assert.match(live, /aria-label="Card stage"/)
+  // Stage moves on the card face use drag; no prominent per-card Move-to dropdown.
+  const body = live.split('<script>')[0]
+  assert.doesNotMatch(body, /class="move-label"/)
+  assert.doesNotMatch(body, /class="stage-select"/)
+  assert.match(body, /name="stage"/)
+})
+
+test('live board client wires pointer drag handlers and editor stage fallback', () => {
+  const live = renderBoardHtml(sampleState(), { endpoint: '/board/test', revision: 'revision' })
+  assert.match(live, /addEventListener\('dragstart'/)
+  assert.match(live, /addEventListener\('dragover'/)
+  assert.match(live, /addEventListener\('drop'/)
+  assert.match(live, /addEventListener\('dragend'/)
+  assert.match(live, /note: 'Board drag-and-drop'/)
+  assert.match(live, /note: 'Board card editor'/)
+  assert.match(live, /classList\.add\('drag-over'\)/)
+  assert.match(live, /classList\.add\('dragging'\)/)
 })
 
 test('large boards render only thirty cards per column initially and expose load-more', () => {
