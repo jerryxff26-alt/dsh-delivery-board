@@ -1,46 +1,43 @@
 # dsh-delivery-board
 
-**delivery board** · DeepSeek Harness plugin.
+[English](README.md) · [中文](README.zh.md)
 
-dsh-delivery-board gives ToB delivery teams **a shared delivery board**: role pipeline + card flow + handoff audit + visual board.
+Work gets handed from analysis to design to development to QA, and context gets lost at every handoff: who owns it now, what "done" means, what is still blocked. Then every Friday someone copies the client weekly report together by hand.
 
-## Visual walkthrough
+**dsh-delivery-board** is a [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) plugin that keeps the delivery board, the handoff trail and the weekly report in one `delivery.json` inside your repo.
 
-Track delivery work from planning to launch: see each card's stage, owner and due date, and keep blockers visible when handing work to the next role.
+```bash
+dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
+```
+
+Desktop app: install the same GitHub spec, `github:jerryxff26-alt/dsh-delivery-board`, from the plugin manager. (The CLI command above is the verified path; the desktop plugin-manager flow has not been separately verified.)
+
+Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
+
+## What you get
+
+- **Stage pipeline + cards** — each card has an owner, due date, acceptance criteria and Definition of Done (DoD).
+- **Handoff audit trail** — moving a card to another stage records who handed what to whom, automatically.
+- **Weekly report** — a Markdown client report: pipeline snapshot, this week's handoffs, open risks/blockers.
+- **Local editable board** — `/delivery open` serves a drag-and-drop board on `127.0.0.1` that saves back to the same JSON. Archive/restore keeps history.
+- **Offline HTML snapshot** — a single read-only file teammates without DSH can open.
 
 ![Editable delivery board with stage-based cards, owner filters and move, edit and archive controls](docs/screenshots/board.jpg)
 
-- **Move and hand off** — drag a card or select its next stage; saved moves record a handoff audit trail.
-- **Make completion explicit** — edit the owner, due date, acceptance criteria and Definition of Done (DoD).
-- **Archive without deleting** — clear finished work from the active board, retain its details and history, and restore it to its original stage.
-
 <details>
-<summary>See card editing and archive views</summary>
-
-### Edit a delivery card
-
-Keep ownership, timing and completion criteria on the same card.
+<summary>Card editor and archive views</summary>
 
 ![Card editor showing title, owner, due date, stage, acceptance criteria and Definition of Done](docs/screenshots/card-editor.jpg)
-
-### Archive and restore
-
-Archived cards retain their original stage and metadata; restore them when work needs to resume.
 
 ![Archive view with preserved card details and restore-to-original-stage buttons](docs/screenshots/archive.jpg)
 
 </details>
 
-*Screenshots use synthetic English-language demo data in a local browser fixture. They demonstrate the board UI, not a verified end-to-end DSH desktop session. The seven-stage board scrolls horizontally; the overview shows part of the pipeline.*
+*Screenshots use synthetic demo data in a local browser fixture.*
 
-## Usage (direct commands or plain language)
+## Usage
 
-```bash
-dsh plugin --profile web add dsh-delivery-board   # install (once published to npm)
-dsh --profile web --dump-config                    # verify the plugin row is mounted
-```
-
-For routine operations, type `/delivery` in DSH's input to find the native command. The slash command is **`/delivery`**, not `/delivery_board`; `delivery_board` is the model-facing tool name. Direct commands use the same validated tools without creating model messages.
+Type `/delivery` in DSH to run commands directly (no model call). `delivery_board` etc. are the model-facing tool names; the slash command is `/delivery`.
 
 ```text
 /delivery help
@@ -56,112 +53,93 @@ For routine operations, type `/delivery` in DSH's input to find the native comma
 /delivery html
 ```
 
-Use `/delivery board --archived` to include archives in text output. `init`, `card`, `update` and `log` accept JSON objects; `move` also accepts JSON for owner changes and handoff notes.
+`/delivery board --archived` includes archived cards. `init`, `card`, `update` and `log` take JSON objects; `move` also accepts JSON for owner changes and handoff notes.
 
-Plain language remains useful for planning and drafting content:
+Or just ask in plain language:
 
 - "Set up a delivery project for ACME with the governance template" → `delivery_init`
-- "Add a card in Analyze: SSO login, acceptance criteria: SSO supported, owner: wang" → `delivery_card`
-- "Hand off c1 to Design, new owner: qiang" → `delivery_move` (records a handoff audit log automatically)
-- "Show the delivery board" → `delivery_board` (quick text view)
-- "Open the editable board" → `delivery_open` (returns a local interactive URL)
-- "Generate the HTML board" → `delivery_board_html` (read-only offline snapshot)
+- "Add a card in Analyze: SSO login, acceptance criteria: SSO supported, owner: Carol" → `delivery_card`
+- "Hand off c1 to Design, new owner: Dave" → `delivery_move` (records a handoff)
+- "Show the delivery board" → `delivery_board`
+- "Open the editable board" → `delivery_open`
+- "Generate the HTML board" → `delivery_board_html`
 - "Generate the client weekly report" → `delivery_weekly`
 
-`delivery_init` itself does not call a model. It copies a template or accepts model/user-supplied custom `stages`, validates the input and creates an empty project. Cards are added separately. The plugin supplies tool-use guidance to DSH's system prompt, not a dedicated PRD-to-plan generation workflow.
-
-## Local desktop development
-
-For the installed macOS desktop app (tested with **DSH 0.2.0-rc.2**):
-
-```bash
-DSH_CLI="/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh"
-"$DSH_CLI" plugin --profile desktop add "link:$PWD" --offline --ignore-scripts
-```
-
-Fully quit and reopen DSH after installing the local plugin **and after changing its source**. Refreshing the plugin list alone did not activate newly linked code in the tested desktop version. In **Plugins → dsh-delivery-board**, verify the component is **Running**, not just enabled. Use a separate workspace for smoke-test data.
-
-`--dump-config` applies to CLI-managed profiles such as `web`; the Electron-managed `desktop` profile rejects it. Use the desktop plugin panel to verify that profile.
+`delivery_init` does not call a model: it copies a template (or your custom `stages`), validates it and creates an empty project.
 
 ## Pipeline templates
 
 | Template | Stages | Gates |
 |---|---|---|
 | `default` (ToB Delivery Pipeline) | Client Requirements → BA Analysis → TL Design → Development → Testing → DevSecOps Launch → Live | 1–2 per stage (e.g. acceptance criteria frozen, security scan passed) |
-| `governance` (Governance Pipeline) | Plan → Analyze → Design → Build → Test → Deploy → Live | Governance / quality / risk / security focused (e.g. rollback plan ready) |
+| `governance` (Governance Pipeline) | Plan → Analyze → Design → Build → Test → Deploy → Live | Quality / risk / security sign-offs (e.g. rollback plan ready) |
 
-Fully custom stages are supported via the `stages` parameter. Gates are display-only in v1 (human-confirmed); enforced gates are on the roadmap.
-
-## Editable local board vs offline HTML
-
-- `/delivery open`: open the **returned URL** in a browser. Drag cards between stages, use the stage dropdown as an alternative, create/edit cards, and archive/restore them. A successful save updates the same workspace JSON and the relevant audit history.
-- `/delivery html`: export a standalone **read-only** HTML file. Search, owner filtering, archive viewing and copying handoff commands work offline; opening a file directly does not grant filesystem write access. Output must use `.html` or `.htm` and cannot resolve to the metadata file.
-- The live service starts on demand, binds only to `127.0.0.1` on an ephemeral port, and exposes an unguessable capability path. The URL grants access to this board on this machine: do not distribute it as a team/shared URL. It expires when the plugin unloads or DSH exits; open the board again to get a fresh URL.
-- The capability is pinned to the workspace and data filename used at opening. It serves no arbitrary files and accepts card actions, not whole-document replacement.
-- The page reports saving/saved/failed. If another tab, command or external edit changes the JSON, an old page cannot silently overwrite it: select **Refresh** and retry. This is conflict protection, not automatic merge or live push synchronization.
-
-## Archival and growing boards
-
-Archive hides a card from active columns without deleting its ID, original stage, metadata or history. Restore returns it to that stage. Archived cards must be restored before editing or moving. Both archive and restore are idempotent; only actual changes add audit entries.
-
-Metadata stays at version 3 with an optional `archivedAt` timestamp; missing or null means active. New card IDs are allocated above existing and historical IDs, including archived cards. Archive does not resolve a blocker or risk.
-
-Each stage and the archive list initially renders up to **30 cards**, with **Load more**. Search by ID/title/owner and filter by owner across the entire current JSON, not just the first page. The latest 20 handoff/decision events are displayed, while all events remain in JSON. This bounds initial DOM work, not data size: the entire JSON is still read and retained, so there is no unlimited-scale guarantee. Automatic bulk archiving and a separate historical datastore are deferred.
-
-## Team collaboration
-
-`delivery.json` lives in the team's shared git repo (offline-friendly) — `git pull/push` is the sync. The read-only HTML snapshot is a single self-contained file, so teammates without DSH can view it too. The live loopback URL is machine-local and is not team synchronization. Concurrent Git changes still require normal conflict review and merge.
+Fully custom stages are supported via the `stages` parameter. Gates are display-only (human-confirmed) in v0.1.
 
 ## Tools
 
 | Tool | What it does |
 |---|---|
-| `delivery_init` | Initialize a project (customer + template/custom stages) |
+| `delivery_init` | Initialize a project (customer + template or custom stages) |
 | `delivery_card` | Add a card: title, stage, owner, due date, acceptance criteria, DoD |
-| `delivery_move` | Hand a card across stages (auto audit log, owner can change) |
+| `delivery_move` | Move a card to another stage (records a handoff; owner can change). Same-stage owner changes are recorded as a decision, not a handoff |
 | `delivery_board` | Quick text board; excludes archived cards unless requested |
 | `delivery_open` | Editable local board URL (drag, create/edit, archive/restore) |
 | `delivery_update` | Edit title, owner, due, acceptance and DoD without moving |
 | `delivery_archive` | Hide a card without deleting data/history |
 | `delivery_restore` | Return an archived card to its original stage |
-| `delivery_board_html` | Read-only standalone HTML snapshot with filters and handoff commands |
-| `delivery_log` | Updates: progress / risk / blocker / decision |
+| `delivery_board_html` | Read-only standalone HTML snapshot |
+| `delivery_log` | Log progress / risk / blocker / decision |
 | `delivery_weekly` | Client weekly report (Markdown) |
+
+## Editable local board vs offline HTML
+
+- `/delivery open` returns a URL. Drag cards between stages (or use the stage dropdown), create/edit cards, archive/restore. Saves go to the same workspace JSON and audit history.
+- The live server starts on demand, binds only to `127.0.0.1` on an ephemeral port and uses an unguessable capability path. Treat the URL as private to your machine; it expires when the plugin unloads or DSH exits.
+- If another tab, command or external edit changes the JSON, a stale page cannot silently overwrite it: press **Refresh** and retry (conflict protection, not live sync).
+- `/delivery html` writes a read-only `.html`/`.htm` file with search, owner filter and archive view; it cannot overwrite the data file.
+
+## Team collaboration
+
+Commit `delivery.json` to the team's shared git repo; `git pull`/`push` is the sync. Concurrent edits still need normal Git conflict review. Each stage renders up to 30 cards initially with **Load more**; search and owner filters cover the whole file.
 
 ## Development
 
 ```bash
+npm install
 npm run check
-npm test                 # domain, HTML, commands, storage and HTTP/lifecycle fixtures
-npm run test:desktop     # real SDK from the installed macOS desktop app
+npm test               # domain, HTML, commands, storage, HTTP and plugin tests (real SDK from npm)
+npm run test:desktop   # optional: runs plugin tests against an installed macOS desktop app's SDK
 ```
 
-`test:desktop` uses the installed app's Electron runtime and real `defineTool`; filesystem and prompt services are test fixtures. It does not install or copy SDK packages, read credentials, or start the desktop UI. For a non-default app location, set `DSH_DESKTOP_APP` to its `.app` directory. This complements, rather than replaces, the desktop UI smoke test.
+Local desktop development (macOS, tested with DSH 0.2.0-rc.2):
 
-Desktop smoke test: in an empty test workspace, run `/delivery help`, initialize with `/delivery init {...}`, add a card and use `/delivery open`. Move/edit/archive/restore in the returned board and inspect the actual JSON plus native command results. Model-facing smoke test: call `delivery_board` (expected initialization error), then `delivery_init` → `delivery_card` → `delivery_move` → `delivery_log` → `delivery_board` → `delivery_board_html` → `delivery_weekly`. Verify the saved JSON, stage/owner changes, handoff audit and generated HTML. Repeat initialization and invalid-stage moves must fail without changing state.
+```bash
+DSH_CLI="/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh"
+"$DSH_CLI" plugin --profile desktop add "link:$PWD" --offline --ignore-scripts
+```
 
-## Implementation notes
+Fully quit and reopen DSH after installing or changing a linked plugin, then check **Plugins → dsh-delivery-board** shows **Running**. `--dump-config` works for CLI-managed profiles such as `web`, not for the desktop profile. Set `DSH_DESKTOP_APP` if the app lives elsewhere.
 
-- Plugin contract `name / inject / Config / apply`, tools via `defineTool` — per the official docs and the community tested guide.
-- Domain logic (`lib/delivery.js`) and the HTML renderer (`lib/board-html.js`) are pure functions, decoupled from dsh.
-- DSH v0.2 tool output renderers return `ContentBlock[]`, e.g. `[{ type: "text", text: value.text }]`; a string causes `content.some is not a function` after execution.
-- All metadata mutations go through `lib/store.js`; HTML exports resolve and compare canonical targets before writing through `ctx.fs`. The write contract is `writeText(target, content, expected?, signal?)`; cancellation belongs in the fourth argument.
-- Weekly handoffs cover seven local-calendar days: `week_start` selects the inclusive first date (`YYYY-MM-DD`); omission uses Monday of the current week. `week_label` changes only the title. Pipeline counts are the current snapshot; risks/blockers remain cumulative because v1 has no resolution status.
-- The HTML renderer escapes user content (XSS-safe), covered by tests.
+Implementation notes:
+
+- Plugin contract `name / inject / Config / apply`; tools via `defineTool`. Tool output renderers return `ContentBlock[]`.
+- Domain logic (`lib/delivery.js`) and the HTML renderer (`lib/board-html.js`) are pure functions; all writes go through `lib/store.js` and `ctx.fs`.
+- Weekly handoffs cover seven local-calendar days starting at `week_start` (default: Monday of the current week). Risks/blockers are cumulative (no resolution status yet).
+- User content in HTML is escaped (covered by tests).
 
 ## Roadmap
 
-- phase 2: embed the existing editable board into DSH, rather than opening its local URL
-- later: enforced gate checklists, multi-project rollup views
-- later: i18n — multilingual UI (board, reports, tool messages)
+- Embed the editable board inside DSH instead of a local URL
+- Enforced gate checklists, multi-project rollup
+- i18n for board, reports and tool messages
 
 ## Known limitations
 
-- DSH is developer preview. SDK peers are pinned to the tested `@deepseek-ai/dsh-tools@0.2.0-rc.2` and `@deepseek-ai/schemastery@~3.18.4`; re-run the SDK and desktop smoke tests before updating the runtime.
-- No Gantt scheduling, Jira/Trello API integration, automatic bulk archive, enforced workflow gates or realtime multi-user synchronization.
-- Browser drag/drop and accessible dropdown controls were checked in the local regression harness; this is not a full keyboard, mobile or WCAG compliance claim.
-- Validation and evidence scope: see [2026-10-07 interaction-upgrade report](docs/interaction-upgrade-2026-10-07.md). Real SDK tests and a browser fixture do not replace an actual DSH desktop command-dispatch check.
+- DSH is a developer preview. Peer range: `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`, `@deepseek-ai/schemastery ~3.18.4`; only 0.2.0-rc.2 has been tested.
+- No Gantt scheduling, Jira/Trello integration, automatic bulk archive, enforced gates or realtime multi-user sync.
+- Drag/drop and dropdown controls are checked in a local browser harness; no full keyboard/mobile/WCAG claim.
 
 ## License
 
-MIT
+[MIT](LICENSE) © 2026 jerryxff26-alt

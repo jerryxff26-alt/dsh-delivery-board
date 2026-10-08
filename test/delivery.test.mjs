@@ -54,7 +54,7 @@ test('addCard stores acceptance criteria and DoD', () => {
   s = addCard(s, {
     title: 'SSO login',
     stage: 'ba',
-    owner: 'wang',
+    owner: 'carol',
     due: '2026-10-20',
     acceptance: ['SSO supported', 'Legacy accounts compatible'],
     dod: 'PRD reviewed\nTest cases written',
@@ -69,11 +69,11 @@ test('addCard stores acceptance criteria and DoD', () => {
 
 test('moveCard hands off across stages and logs the audit trail', () => {
   let s = createProject({ customer: 'ACME' })
-  s = addCard(s, { title: 'SSO login', stage: 'ba', owner: 'wang' })
-  s = moveCard(s, { cardId: 'c1', toStage: 'tl', owner: 'qiang', note: 'PRD reviewed' })
+  s = addCard(s, { title: 'SSO login', stage: 'ba', owner: 'carol' })
+  s = moveCard(s, { cardId: 'c1', toStage: 'tl', owner: 'dave', note: 'PRD reviewed' })
   const card = s.cards[0]
   assert.equal(card.stage, 'tl')
-  assert.equal(card.owner, 'qiang')
+  assert.equal(card.owner, 'dave')
   const last = s.logs[s.logs.length - 1]
   assert.equal(last.type, 'handoff')
   assert.ok(last.text.includes('BA Analysis'))
@@ -94,13 +94,13 @@ test('appendLog validates type and text', () => {
 
 test('renderBoard shows gates and risks', () => {
   let s = createProject({ customer: 'ACME' })
-  s = addCard(s, { title: 'SSO login', stage: 'dev', owner: 'li', due: '2026-10-25' })
+  s = addCard(s, { title: 'SSO login', stage: 'dev', owner: 'erin', due: '2026-10-25' })
   s = appendLog(s, { type: 'blocker', text: 'Waiting on client UAT env' })
   const board = renderBoard(s)
   assert.ok(board.includes('# ACME Delivery Board'))
   assert.ok(board.includes('## Development'))
   assert.ok(board.includes('Gates: DoD met'))
-  assert.ok(board.includes('[c1] SSO login @li'))
+  assert.ok(board.includes('[c1] SSO login @erin'))
   assert.ok(board.includes('Waiting on client UAT env'))
 })
 
@@ -137,7 +137,7 @@ test('weekly report filters handoffs to a real seven-day reporting window', () =
 
 test('archiveCard hides archived cards by default and includes explicit marks and counts on request', () => {
   let state = createProject({ customer: 'ACME' })
-  state = addCard(state, { title: 'Archived feature', stage: 'dev', owner: 'li', due: '2026-10-25' })
+  state = addCard(state, { title: 'Archived feature', stage: 'dev', owner: 'erin', due: '2026-10-25' })
   state = addCard(state, { title: 'Active feature', stage: 'dev' })
   state = appendLog(state, { type: 'risk', text: 'Original risk', cardId: 'c1' })
   const original = structuredClone(state)
@@ -165,17 +165,17 @@ test('archiveCard hides archived cards by default and includes explicit marks an
   const fullBoard = renderBoard(archived, { includeArchived: true })
   assert.match(fullBoard, /Cards: 1 active \/ 1 archived/)
   assert.match(fullBoard, /## Development \(Dev\) · 2 \(1 archived\)/)
-  assert.match(fullBoard, /\[c1\] Archived feature @li \(due 2026-10-25\) \[archived\]/)
+  assert.match(fullBoard, /\[c1\] Archived feature @erin \(due 2026-10-25\) \[archived\]/)
   assert.match(fullBoard, /\[c2\] Active feature/)
 })
 
 test('restoreCard retains identity, all card fields and the complete history', () => {
   let state = createProject({ customer: 'ACME' })
   state = addCard(state, {
-    title: 'SSO login', stage: 'ba', owner: 'wang', due: '2026-10-20',
+    title: 'SSO login', stage: 'ba', owner: 'carol', due: '2026-10-20',
     acceptance: ['SSO supported'], dod: ['Test cases written'],
   })
-  state = moveCard(state, { cardId: 'c1', toStage: 'dev', owner: 'li', note: 'Design approved' })
+  state = moveCard(state, { cardId: 'c1', toStage: 'dev', owner: 'erin', note: 'Design approved' })
   state = appendLog(state, { type: 'blocker', text: 'Client approval pending', cardId: 'c1' })
   const card = structuredClone(state.cards[0])
   const original = structuredClone(state)
@@ -192,7 +192,7 @@ test('restoreCard retains identity, all card fields and the complete history', (
   assert.equal(restored.logs.at(-1).type, 'decision')
   assert.equal(restored.logs.at(-1).cardId, 'c1')
   assert.match(restored.logs.at(-1).text, /restored/)
-  assert.match(renderBoard(restored), /\[c1\] SSO login @li/)
+  assert.match(renderBoard(restored), /\[c1\] SSO login @erin/)
   assert.doesNotMatch(renderBoard(restored), /\[archived\]/)
 })
 
@@ -215,10 +215,10 @@ test('moving or updating archived cards requires restoration first', () => {
   const initial = addCard(createProject({ customer: 'ACME' }), { title: 'Feature', stage: 'ba' })
   const archived = archiveCard(initial, { cardId: 'c1' })
   const snapshot = structuredClone(archived)
-  assert.throws(() => moveCard(archived, { cardId: 'c1', toStage: 'dev', owner: 'li' }), /archived.*restore.*first/)
+  assert.throws(() => moveCard(archived, { cardId: 'c1', toStage: 'dev', owner: 'erin' }), /archived.*restore.*first/)
   assert.throws(() => moveCard(archived, { cardId: 'c1', toStage: 'nope' }), /archived.*restore.*first/)
   for (const changes of [
-    {}, { title: 'Changed' }, { owner: 'li' }, { due: null },
+    {}, { title: 'Changed' }, { owner: 'erin' }, { due: null },
     { acceptance: ['Approved'] }, { dod: ['Ready'] }, { due: 'not-a-date' },
   ]) {
     assert.throws(() => updateCard(archived, { cardId: 'c1', ...changes }), /archived.*restore.*first/)
@@ -304,7 +304,7 @@ test('weekly snapshots exclude archived cards while keeping in-window handoffs a
 test('updateCard edits partial fields immutably without moving cards or changing identity', () => {
   let state = createProject({ customer: 'ACME' })
   state = addCard(state, {
-    title: 'Feature', stage: 'ba', owner: 'wang', due: '2026-10-20',
+    title: 'Feature', stage: 'ba', owner: 'carol', due: '2026-10-20',
     acceptance: ['Original criterion'], dod: ['Original DoD'],
   })
   state = addCard(state, { title: 'Other feature', stage: 'dev' })
@@ -324,11 +324,11 @@ test('updateCard edits partial fields immutably without moving cards or changing
   assert.match(edited.logs.at(-1).text, /updated: title/)
 
   const allFields = updateCard(edited, {
-    cardId: 'c1', owner: '  li  ', due: '2028-02-29',
+    cardId: 'c1', owner: '  erin  ', due: '2028-02-29',
     acceptance: '  New criterion  \n\nSecond criterion', dod: ['  Ready  ', '', 'Tested'],
   })
   assert.deepEqual(allFields.cards[0], {
-    ...edited.cards[0], owner: 'li', due: '2028-02-29',
+    ...edited.cards[0], owner: 'erin', due: '2028-02-29',
     acceptance: ['New criterion', 'Second criterion'], dod: ['Ready', 'Tested'],
   })
   assert.equal(allFields.logs.length, edited.logs.length + 1)
@@ -337,7 +337,7 @@ test('updateCard edits partial fields immutably without moving cards or changing
 
 test('updateCard supports explicit clears and leaves omitted or undefined fields unchanged', () => {
   const state = addCard(createProject({ customer: 'ACME' }), {
-    title: 'Feature', stage: 'dev', owner: 'li', due: '2026-10-20',
+    title: 'Feature', stage: 'dev', owner: 'erin', due: '2026-10-20',
     acceptance: ['Confirmed'], dod: ['Tested'],
   })
   const cleared = updateCard(state, { cardId: 'c1', owner: null, due: null, acceptance: null, dod: [] })
@@ -346,7 +346,7 @@ test('updateCard supports explicit clears and leaves omitted or undefined fields
   assert.equal(updateCard(state, { cardId: 'c1' }), state)
   assert.equal(updateCard(state, { cardId: 'c1', title: undefined, owner: undefined, due: undefined, acceptance: undefined, dod: undefined }), state)
   assert.equal(updateCard(state, {
-    cardId: 'c1', title: ' Feature ', owner: ' li ', due: '2026-10-20', acceptance: 'Confirmed', dod: ['Tested'],
+    cardId: 'c1', title: ' Feature ', owner: ' erin ', due: '2026-10-20', acceptance: 'Confirmed', dod: ['Tested'],
   }), state)
   assert.equal(state.logs.length, 0)
 })
@@ -397,10 +397,40 @@ test('version 3 cards missing archivedAt or using null remain active without mig
   assert.match(renderWeekly(state, '', '2026-10-05'), /- Development: 2 card\(s\)/)
   assert.equal(restoreCard(state, { cardId: 'c1' }), state)
   assert.equal(restoreCard(state, { cardId: 'c2' }), state)
-  assert.equal(updateCard(state, { cardId: 'c1', owner: 'li' }).cards[0].owner, 'li')
+  assert.equal(updateCard(state, { cardId: 'c1', owner: 'erin' }).cards[0].owner, 'erin')
   assert.equal(moveCard(state, { cardId: 'c2', toStage: 'test' }).cards[1].stage, 'test')
   assert.equal(addCard(state, { title: 'Next feature', stage: 'dev' }).cards.at(-1).id, 'c3')
   assert.equal(archiveCard(state, { cardId: 'c2' }).cards[1].archivedAt != null, true)
   assert.deepEqual(state, snapshot)
   assert.equal(state.version, 3)
+})
+
+test('same-stage owner change records a decision, not a handoff, and stays out of the weekly report', async () => {
+  const { applyAction } = await import('../lib/actions.js')
+  let state = addCard(createProject({ customer: 'ACME' }), { title: 'Feature', stage: 'dev', owner: 'carol' })
+  const before = state.logs.length
+  state = moveCard(state, { cardId: 'c1', toStage: 'dev', owner: 'dave' })
+  assert.equal(state.cards[0].stage, 'dev')
+  assert.equal(state.cards[0].owner, 'dave')
+  assert.equal(state.logs.length, before + 1)
+  const entry = state.logs.at(-1)
+  assert.equal(entry.type, 'decision')
+  assert.equal(entry.cardId, 'c1')
+  assert.match(entry.text, /owner changed: carol → dave \(stage unchanged: Development\)/)
+  assert.equal(state.logs.some((l) => l.type === 'handoff'), false)
+  const weekly = renderWeekly(state) // current week, which contains the entry above
+  assert.doesNotMatch(weekly, /Development → Development/)
+  assert.match(weekly, /## Handoffs this week\n- none/)
+
+  // Same path through the shared action layer (tools, slash commands, live board).
+  const viaAction = applyAction(state, 'move', { card_id: 'c1', to_stage: 'dev', owner: 'erin', note: 'rebalanced' })
+  assert.equal(viaAction.logs.at(-1).type, 'decision')
+  assert.match(viaAction.logs.at(-1).text, /dave → erin .*: rebalanced$/)
+  // Unchanged owner and no note is a no-op.
+  assert.equal(applyAction(state, 'move', { card_id: 'c1', to_stage: 'dev', owner: 'dave' }), state)
+  assert.equal(moveCard(state, { cardId: 'c1', toStage: 'dev' }), state)
+  // A real stage change still records a handoff.
+  const handed = moveCard(state, { cardId: 'c1', toStage: 'test', owner: 'erin' })
+  assert.equal(handed.logs.at(-1).type, 'handoff')
+  assert.match(handed.logs.at(-1).text, /Development → Testing/)
 })

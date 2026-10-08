@@ -1,7 +1,7 @@
 // dsh-delivery-board — ToB delivery collaboration plugin (host tool plugin)
 //
-// Positioning: delivery board for ToB teams: a shared delivery board
-// with a role pipeline, card flow, handoff audit and visual board.
+// A shared delivery board for ToB delivery teams: role pipeline, card flow,
+// handoff audit trail, weekly report and a local visual board.
 // State lives in delivery.json inside the team's shared git repo (offline-friendly).
 //
 // Plugin contract (per deepseek-ai/deepseek-harness official docs and the community
@@ -63,8 +63,8 @@ export function apply(ctx, config) {
     name: 'delivery-board',
     order: 100,
     text: [
-      'ToB delivery collaboration plugin (dsh-delivery-board) — the team\'s delivery board.',
-      'Templates: "default" (Client Requirements → BA Analysis → TL Design → Development → Testing → DevSecOps Launch → Live) or "governance" (governance-style pipeline: Plan → Analyze → Design → Build → Test → Deploy, each stage with governance gates).',
+      'ToB delivery collaboration plugin (dsh-delivery-board) — the team\'s shared delivery board.',
+      'Templates: "default" (Client Requirements → BA Analysis → TL Design → Development → Testing → DevSecOps Launch → Live) or "governance" (governance-style pipeline: Plan → Analyze → Design → Build → Test → Deploy, each stage with quality/risk/security gates).',
       'Use delivery_init once per project. Use delivery_card to add work cards (with acceptance criteria + DoD).',
       'Use delivery_move to hand cards across stages (owner can change; a handoff audit log is recorded automatically).',
       'Use delivery_board for a quick text board; delivery_open for the interactive local board (drag, edit, archive and restore save to the same JSON). delivery_board_html exports a read-only offline snapshot.',
@@ -84,7 +84,7 @@ export function apply(ctx, config) {
         template: {
           type: 'string',
           enum: Object.keys(TEMPLATES),
-          description: 'Pipeline template: default = ToB delivery pipeline, governance = governance governance pipeline',
+          description: 'Pipeline template: default = ToB delivery pipeline, governance = governance-style pipeline with sign-off gates',
         },
         stages: {
           type: 'array',
@@ -157,7 +157,7 @@ export function apply(ctx, config) {
         })
         if (!moved) return ok(`No changes: ${args.card_id} is already in ${args.to_stage}.`)
         const last = next.logs[next.logs.length - 1]
-        return ok(`Handed off: ${last.text}`)
+        return ok(last.type === 'handoff' ? `Handed off: ${last.text}` : `Updated (no handoff): ${last.text}`)
       },
     }),
   )

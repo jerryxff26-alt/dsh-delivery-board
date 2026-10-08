@@ -1,18 +1,19 @@
 // Browser regression harness only. Production /delivery open uses ctx.fs from
 // DSH; this adapter writes synthetic test files and is not the plugin backend.
 import fs from 'node:fs/promises'
-import { resolve, dirname } from 'node:path'
+import { resolve, dirname, join } from 'node:path'
+import { tmpdir } from 'node:os'
 import { createHash } from 'node:crypto'
 import { createProject, addCard, appendLog, archiveCard } from '../../lib/delivery.js'
 import { createBoardManager } from '../../lib/board-server.js'
 
-const cwd = resolve(process.argv[2] ?? '/tmp/dsh-delivery-board-web-regression-20261007')
+const cwd = resolve(process.argv[2] ?? join(tmpdir(), 'dsh-delivery-board-web-regression'))
 await fs.mkdir(cwd, { recursive: true })
 const dataPath = resolve(cwd, 'delivery.json')
 let exists = false
 try { await fs.access(dataPath); exists = true } catch {}
 if (!exists) {
-  let state = createProject({ customer: 'DSH 交互增强回归（虚构）', template: 'governance' })
+  let state = createProject({ customer: 'Synthetic regression board', template: 'governance' })
   state = addCard(state, { title: 'SSO 登录交付', stage: 'design', owner: 'tester-a', due: '2026-10-20', acceptance: ['支持 SSO'], dod: ['需求评审完成'] })
   state = addCard(state, { title: '接口联调', stage: 'build', owner: 'tester-b', due: '2026-10-18' })
   state = addCard(state, { title: '已完成验收样例', stage: 'live', owner: 'tester-a' })

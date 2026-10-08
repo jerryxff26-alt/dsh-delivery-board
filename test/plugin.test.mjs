@@ -142,3 +142,15 @@ test('same-stage slash moves are no-ops, not errors or unrelated handoff message
     assert.equal(writes.length, count)
   }
 })
+
+test('same-stage owner change via delivery_move is not reported as a handoff', async () => {
+  const { tools, exec, files } = fixture()
+  await tools.get('delivery_init').execute({ customer: 'Owner change' }, exec)
+  await tools.get('delivery_card').execute({ title: 'API', stage: 'dev', owner: 'tester-a' }, exec)
+  const result = await tools.get('delivery_move').execute({ card_id: 'c1', to_stage: 'dev', owner: 'tester-b' }, exec)
+  assert.match(result.text, /Updated \(no handoff\): "API" owner changed: tester-a → tester-b/)
+  const state = JSON.parse(files.get('/workspace/delivery.json'))
+  assert.equal(state.cards[0].owner, 'tester-b')
+  assert.equal(state.logs.filter((entry) => entry.type === 'handoff').length, 0)
+  assert.doesNotMatch((await tools.get('delivery_weekly').execute({}, exec)).text, /Development → Development/)
+})

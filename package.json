@@ -1,1 +1,55 @@
-{"description":"delivery board for DeepSeek Harness: team pipeline board, handoff audit trail, client weekly reports.","dsh":{"bundle":{"patch":"./cordis.patch.yml"}},"files":["index.js","lib/","cordis.patch.yml","README.md"],"keywords":["dsh-plugin","deepseek-harness","delivery","tob","kanban"],"license":"MIT","main":"index.js","name":"dsh-delivery-board","peerDependencies":{"@deepseek-ai/dsh-tools":"0.2.0-rc.2","@deepseek-ai/schemastery":"~3.18.4"},"scripts":{"check":"node --check index.js && node --check lib/delivery.js && node --check lib/store.js && node --check lib/board-html.js && node --check lib/board-view.js && node --check lib/board-client.js && node --check lib/board-server.js && node --check lib/commands.js && node --check lib/actions.js","test":"node --test test/delivery.test.mjs test/board-html.test.mjs test/store.test.mjs test/commands.test.mjs test/board-server.test.mjs","test:desktop":"node test/desktop-runner.mjs"},"type":"module","version":"0.1.0"}
+{
+  "name": "dsh-delivery-board",
+  "version": "0.1.0",
+  "description": "Delivery handoff board plugin for DeepSeek Harness (dsh): stage pipeline, handoff audit trail, weekly Markdown report, local editable board.",
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "deepseek",
+    "delivery",
+    "kanban",
+    "project-management",
+    "tob"
+  ],
+  "license": "MIT",
+  "author": "jerryxff26-alt",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jerryxff26-alt/dsh-delivery-board.git"
+  },
+  "homepage": "https://github.com/jerryxff26-alt/dsh-delivery-board#readme",
+  "bugs": {
+    "url": "https://github.com/jerryxff26-alt/dsh-delivery-board/issues"
+  },
+  "type": "module",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "lib/",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "check": "node --check index.js && node --check lib/delivery.js && node --check lib/store.js && node --check lib/board-html.js && node --check lib/board-view.js && node --check lib/board-client.js && node --check lib/board-server.js && node --check lib/commands.js && node --check lib/actions.js",
+    "test": "node --test test/delivery.test.mjs test/board-html.test.mjs test/store.test.mjs test/commands.test.mjs test/board-server.test.mjs test/plugin.test.mjs",
+    "test:desktop": "node test/desktop-runner.mjs"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-tools": ">=0.2.0-rc.2 <0.3.0",
+    "@deepseek-ai/schemastery": "~3.18.4"
+  },
+  "devDependencies": {
+    "@deepseek-ai/dsh-tools": "0.2.0-rc.2",
+    "@deepseek-ai/schemastery": "~3.18.4"
+  }
+}

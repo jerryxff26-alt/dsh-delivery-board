@@ -1,1 +1,7 @@
 node_modules/
+.DS_Store
+*.log
+.env
+.env.*
+delivery.json
+delivery-board.html

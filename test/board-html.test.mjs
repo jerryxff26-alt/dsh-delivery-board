@@ -10,7 +10,7 @@ function sampleState() {
   s = addCard(s, {
     title: 'SSO login<script>alert(1)</script>',
     stage: 'analyze',
-    owner: 'wang',
+    owner: 'carol',
     due: '2020-01-01', // overdue on purpose
     acceptance: ['SSO supported'],
     dod: ['PRD reviewed'],
