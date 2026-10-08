@@ -4,6 +4,35 @@
 
 dsh-delivery-board gives ToB delivery teams **a shared delivery board**: role pipeline + card flow + handoff audit + visual board.
 
+## Visual walkthrough
+
+Track delivery work from planning to launch: see each card's stage, owner and due date, and keep blockers visible when handing work to the next role.
+
+![Editable delivery board with stage-based cards, owner filters and move, edit and archive controls](docs/interaction-upgrade-2026-10-07/06-drag-saved.png)
+
+- **Move and hand off** — drag a card or select its next stage; saved moves record a handoff audit trail.
+- **Make completion explicit** — edit the owner, due date, acceptance criteria and Definition of Done (DoD).
+- **Archive without deleting** — clear finished work from the active board, retain its details and history, and restore it to its original stage.
+
+<details>
+<summary>See card editing and archive views</summary>
+
+### Edit a delivery card
+
+Keep ownership, timing and completion criteria on the same card.
+
+![Card editor showing title, owner, due date, stage, acceptance criteria and Definition of Done](docs/interaction-upgrade-2026-10-07/03-edit-dialog.png)
+
+### Archive and restore
+
+Archived cards retain their original stage and metadata; restore them when work needs to resume.
+
+![Archive view with preserved card details and restore-to-original-stage buttons](docs/interaction-upgrade-2026-10-07/04-archived.png)
+
+</details>
+
+*Screenshots use synthetic demo data in the local browser regression fixture. They show the implemented board UI, not a verified end-to-end DSH desktop session. The seven-stage board scrolls horizontally; the overview shows part of the pipeline.*
+
 ## Usage (direct commands or plain language)
 
 ```bash
