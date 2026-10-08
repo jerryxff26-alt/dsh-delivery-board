@@ -14,6 +14,13 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 已在 DSH **0.2.0-rc.2**（开发者预览版）上测试，无运行时依赖。
 
+## 演示
+
+![虚构演示：问题 → 阶段看板 → 交接审计 → 周报/HTML → 安装](docs/demo/demo.gif)
+
+*约 20 秒无声说明（虚构演示数据）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
+
+
 ## 功能
 
 - **阶段流水线 + 卡片**：每张卡有负责人、截止日期、验收标准和完成定义（DoD）。

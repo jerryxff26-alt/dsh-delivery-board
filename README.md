@@ -14,6 +14,13 @@ Desktop app: install the same GitHub spec, `github:jerryxff26-alt/dsh-delivery-b
 
 Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
 
+## Demo
+
+![Synthetic demo: problem → stage board → handoff audit → weekly report / HTML → install](docs/demo/demo.gif)
+
+*~20s silent walkthrough (synthetic demo data). [MP4](docs/demo/demo.mp4) available if you prefer download over the inline GIF.*
+
+
 ## What you get
 
 - **Stage pipeline + cards** — each card has an owner, due date, acceptance criteria and Definition of Done (DoD).
