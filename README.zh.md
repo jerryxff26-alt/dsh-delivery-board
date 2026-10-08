@@ -16,9 +16,9 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 ## 演示
 
-![虚构演示：问题 → 阶段看板 → 交接审计 → 周报/HTML → 安装](docs/demo/demo.gif)
+![虚构演示：痛点 → 阶段看板 → 交接审计 → 周报/HTML → 安装](docs/demo/demo.gif)
 
-*约 31 秒无声说明（虚构 ACME：痛点 → 完整看板 → 拖拽换阶段 → 编辑 → 交接/归档 → 周报 → 安装）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
+*约 19 秒无声演示（英文叠字 · 虚构 ACME：痛点 → 一张 delivery.json 看板 → 卡片编辑 → 交接审计 → 周报 HTML → 安装）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
 
 
 ## 功能

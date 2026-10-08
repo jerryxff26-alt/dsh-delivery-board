@@ -16,10 +16,9 @@ Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
 
 ## Demo
 
-![Synthetic demo: problem → stage board → handoff audit → weekly report / HTML → install](docs/demo/demo.gif)
+![Synthetic demo: pain → stage board → handoff audit → weekly HTML → install](docs/demo/demo.gif)
 
-*~31s silent walkthrough (synthetic ACME demo: pain → full board → drag between stages → editor → handoff/archive → weekly → install). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
-
+*~19s silent walkthrough (English overlays · synthetic ACME: pain → one delivery.json board → editor → handoff audit → weekly HTML → install). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
 
 ## What you get
 
