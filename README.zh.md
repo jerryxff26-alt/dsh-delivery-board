@@ -18,7 +18,7 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 ![虚构演示：问题 → 阶段看板 → 交接审计 → 周报/HTML → 安装](docs/demo/demo.gif)
 
-*约 20 秒无声说明（虚构演示数据）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
+*约 22 秒无声说明（虚构 ACME：痛点 → 完整看板 → 编辑 → 交接/归档 → 周报 → 安装）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
 
 
 ## 功能
@@ -29,9 +29,9 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 - **本地可编辑看板**：`/delivery open` 在 `127.0.0.1` 上提供拖拽看板，保存回同一个 JSON；归档/恢复保留历史。
 - **离线 HTML 快照**：单个只读文件，没装 DSH 的同事也能打开。
 
-![可编辑交付看板](docs/screenshots/board.jpg)
+![宽屏完整治理流水线看板（Plan→Live，虚构 ACME 卡片）](docs/screenshots/board.jpg)
 
-*截图使用本地浏览器夹具中的虚构演示数据。*
+*截图在宽视口下截取（阶段列完整入镜），来自本地回环夹具上的虚构 ACME 看板。*
 
 ## 使用
 

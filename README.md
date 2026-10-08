@@ -18,7 +18,7 @@ Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
 
 ![Synthetic demo: problem → stage board → handoff audit → weekly report / HTML → install](docs/demo/demo.gif)
 
-*~20s silent walkthrough (synthetic demo data). [MP4](docs/demo/demo.mp4) available if you prefer download over the inline GIF.*
+*~22s silent walkthrough (synthetic ACME demo: pain → full board → editor → handoff/archive → weekly → install). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
 
 
 ## What you get
@@ -29,7 +29,7 @@ Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
 - **Local editable board** — `/delivery open` serves a drag-and-drop board on `127.0.0.1` that saves back to the same JSON. Archive/restore keeps history.
 - **Offline HTML snapshot** — a single read-only file teammates without DSH can open.
 
-![Editable delivery board with stage-based cards, owner filters and move, edit and archive controls](docs/screenshots/board.jpg)
+![Full-width editable delivery board showing all governance stages Plan→Live with synthetic ACME cards](docs/screenshots/board.jpg)
 
 <details>
 <summary>Card editor and archive views</summary>
@@ -40,7 +40,7 @@ Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
 
 </details>
 
-*Screenshots use synthetic demo data in a local browser fixture.*
+*Screenshots captured at a wide viewport (full stage columns in frame) from a synthetic ACME board served by the local loopback fixture.*
 
 ## Usage
 
