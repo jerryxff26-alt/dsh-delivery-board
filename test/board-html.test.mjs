@@ -1,8 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { createProject, addCard, moveCard, appendLog } from '../lib/delivery.js'
+import { createProject, addCard, archiveCard, moveCard, appendLog } from '../lib/delivery.js'
 import { renderBoardHtml } from '../lib/board-html.js'
+import { formatTimestamp, renderColumns, renderArchive } from '../lib/board-view.js'
 
 function sampleState() {
   let s = createProject({ customer: 'ACME <Group>', template: 'governance' })
@@ -58,12 +59,12 @@ test('renderBoardHtml handles empty projects', () => {
 
 test('offline snapshots are visibly read-only and live boards have accessible move and edit controls', () => {
   const state = sampleState()
-  assert.match(renderBoardHtml(state), /只读 HTML 快照/)
+  assert.match(renderBoardHtml(state), /Read-only HTML snapshot/)
   assert.match(renderBoardHtml(state), /draggable="false"/)
   const live = renderBoardHtml(state, { endpoint: '/board/test', revision: 'revision' })
   assert.match(live, /draggable="true"/)
-  assert.match(live, /aria-label="移动 c1 到阶段"/)
-  assert.match(live, /aria-label="编辑 c1"/)
+  assert.match(live, /aria-label="Move c1 to stage"/)
+  assert.match(live, /aria-label="Edit c1"/)
   assert.match(live, /aria-live="polite"/)
 })
 
@@ -72,8 +73,8 @@ test('large boards render only thirty cards per column initially and expose load
   for (let i = 0; i < 1000; i++) state = addCard(state, { title: `Task ${i}`, stage: 'build' })
   const markup = renderBoardHtml(state).split('<script>')[0]
   assert.equal((markup.match(/<article class="card/g) ?? []).length, 30)
-  assert.match(markup, /加载更多（30\/1000）/)
-  assert.match(markup, /活动卡片 \(1000\)/)
+  assert.match(markup, /Load more \(30\/1000\)/)
+  assert.match(markup, /Active cards \(1000\)/)
 })
 
 test('archived cards are not rendered in the initial active view', () => {
@@ -81,7 +82,40 @@ test('archived cards are not rendered in the initial active view', () => {
   state.cards[0].archivedAt = '2026-10-07T03:00:00Z'
   const markup = renderBoardHtml(state).split('<script>')[0]
   assert.equal((markup.match(/<article class="card/g) ?? []).length, 0)
-  assert.match(markup, /已归档 \(1\)/)
+  assert.match(markup, /Archived \(1\)/)
+})
+
+test('English demo data keeps live, read-only and dynamic UI labels free of Chinese characters', () => {
+  let state = sampleState()
+  state = addCard(state, { title: 'Unassigned task', stage: 'design' })
+  for (const title of ['Completed task', 'Another completed task']) {
+    state = addCard(state, { title, stage: 'design' })
+    state = archiveCard(state, { cardId: state.cards.at(-1).id })
+  }
+  const chinese = /\p{Script=Han}/u
+  for (const interactive of [false, true]) {
+    const html = renderBoardHtml(state, interactive ? { endpoint: '/board/test', revision: 'revision' } : {})
+    assert.match(html, /<html lang="en">/)
+    // The full page also embeds browser-only save, refresh, editor and copy labels.
+    assert.doesNotMatch(html, chinese)
+    assert.match(html, /Unassigned/)
+    const ui = { interactive, query: '', owner: '', limits: { design: 1 }, archiveLimit: 1 }
+    const columns = renderColumns(state, ui)
+    const archive = renderArchive(state, ui)
+    assert.doesNotMatch(columns + archive, chinese)
+    assert.match(columns, /Load more \(1\/2\)/)
+    assert.match(archive, /Load more \(1\/2\)/)
+    assert.match(archive, /archived on/)
+    if (interactive) assert.match(archive, /Restore to original stage/)
+    const filtered = { ...ui, query: 'no matching title' }
+    const emptyColumns = renderColumns(state, filtered)
+    const emptyArchive = renderArchive(state, filtered)
+    assert.doesNotMatch(emptyColumns + emptyArchive, chinese)
+    assert.match(emptyColumns, /No matching cards/)
+    assert.match(emptyArchive, /No matching archived cards/)
+  }
+  const timestamp = '2026-10-07T03:00:00Z'
+  assert.equal(formatTimestamp(timestamp), new Date(timestamp).toLocaleString('en-US', { hour12: false, timeZoneName: 'short' }))
 })
 
 test('bootstrap data cannot close the script or introduce executable user markup', async () => {

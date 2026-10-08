@@ -8,7 +8,7 @@ dsh-delivery-board gives ToB delivery teams **a shared delivery board**: role pi
 
 Track delivery work from planning to launch: see each card's stage, owner and due date, and keep blockers visible when handing work to the next role.
 
-![Editable delivery board with stage-based cards, owner filters and move, edit and archive controls](docs/interaction-upgrade-2026-10-07/06-drag-saved.png)
+![Editable delivery board with stage-based cards, owner filters and move, edit and archive controls](docs/screenshots/board.jpg)
 
 - **Move and hand off** — drag a card or select its next stage; saved moves record a handoff audit trail.
 - **Make completion explicit** — edit the owner, due date, acceptance criteria and Definition of Done (DoD).
@@ -21,17 +21,17 @@ Track delivery work from planning to launch: see each card's stage, owner and du
 
 Keep ownership, timing and completion criteria on the same card.
 
-![Card editor showing title, owner, due date, stage, acceptance criteria and Definition of Done](docs/interaction-upgrade-2026-10-07/03-edit-dialog.png)
+![Card editor showing title, owner, due date, stage, acceptance criteria and Definition of Done](docs/screenshots/card-editor.jpg)
 
 ### Archive and restore
 
 Archived cards retain their original stage and metadata; restore them when work needs to resume.
 
-![Archive view with preserved card details and restore-to-original-stage buttons](docs/interaction-upgrade-2026-10-07/04-archived.png)
+![Archive view with preserved card details and restore-to-original-stage buttons](docs/screenshots/archive.jpg)
 
 </details>
 
-*Screenshots use synthetic demo data in the local browser regression fixture. They show the implemented board UI, not a verified end-to-end DSH desktop session. The seven-stage board scrolls horizontally; the overview shows part of the pipeline.*
+*Screenshots use synthetic English-language demo data in a local browser fixture. They demonstrate the board UI, not a verified end-to-end DSH desktop session. The seven-stage board scrolls horizontally; the overview shows part of the pipeline.*
 
 ## Usage (direct commands or plain language)
 
@@ -98,7 +98,7 @@ Fully custom stages are supported via the `stages` parameter. Gates are display-
 - `/delivery html`: export a standalone **read-only** HTML file. Search, owner filtering, archive viewing and copying handoff commands work offline; opening a file directly does not grant filesystem write access. Output must use `.html` or `.htm` and cannot resolve to the metadata file.
 - The live service starts on demand, binds only to `127.0.0.1` on an ephemeral port, and exposes an unguessable capability path. The URL grants access to this board on this machine: do not distribute it as a team/shared URL. It expires when the plugin unloads or DSH exits; open the board again to get a fresh URL.
 - The capability is pinned to the workspace and data filename used at opening. It serves no arbitrary files and accepts card actions, not whole-document replacement.
-- The page reports saving/saved/failed. If another tab, command or external edit changes the JSON, an old page cannot silently overwrite it: select **刷新** and retry. This is conflict protection, not automatic merge or live push synchronization.
+- The page reports saving/saved/failed. If another tab, command or external edit changes the JSON, an old page cannot silently overwrite it: select **Refresh** and retry. This is conflict protection, not automatic merge or live push synchronization.
 
 ## Archival and growing boards
 
@@ -106,7 +106,7 @@ Archive hides a card from active columns without deleting its ID, original stage
 
 Metadata stays at version 3 with an optional `archivedAt` timestamp; missing or null means active. New card IDs are allocated above existing and historical IDs, including archived cards. Archive does not resolve a blocker or risk.
 
-Each stage and the archive list initially renders up to **30 cards**, with **加载更多**. Search by ID/title/owner and filter by owner across the entire current JSON, not just the first page. The latest 20 handoff/decision events are displayed, while all events remain in JSON. This bounds initial DOM work, not data size: the entire JSON is still read and retained, so there is no unlimited-scale guarantee. Automatic bulk archiving and a separate historical datastore are deferred.
+Each stage and the archive list initially renders up to **30 cards**, with **Load more**. Search by ID/title/owner and filter by owner across the entire current JSON, not just the first page. The latest 20 handoff/decision events are displayed, while all events remain in JSON. This bounds initial DOM work, not data size: the entire JSON is still read and retained, so there is no unlimited-scale guarantee. Automatic bulk archiving and a separate historical datastore are deferred.
 
 ## Team collaboration
 
