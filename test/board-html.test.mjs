@@ -1,9 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { createProject, addCard, archiveCard, moveCard, appendLog } from '../lib/delivery.js'
+import { createProject, addCard, archiveCard, moveCard, appendLog, resolveLog } from '../lib/delivery.js'
 import { renderBoardHtml } from '../lib/board-html.js'
-import { formatTimestamp, renderColumns, renderArchive } from '../lib/board-view.js'
+import { formatTimestamp, renderColumns, renderArchive, renderRisks } from '../lib/board-view.js'
 
 function sampleState() {
   let s = createProject({ customer: 'ACME <Group>', template: 'governance' })
@@ -53,8 +53,10 @@ test('renderBoardHtml marks overdue cards', () => {
 
 test('renderBoardHtml handles empty projects', () => {
   const html = renderBoardHtml(createProject({ customer: 'Empty' }))
-  assert.ok(html.includes('(empty)'))
-  assert.ok(!html.includes('Open risks'))
+  const body = html.split('<script>')[0]
+  assert.ok(body.includes('(empty)'))
+  assert.ok(!body.includes('Open risks'))
+  assert.equal(body.includes('id="risks"'), true)
 })
 
 test('offline snapshots are visibly read-only and live boards prioritize drag over card-face stage selects', () => {
@@ -145,4 +147,22 @@ test('bootstrap data cannot close the script or introduce executable user markup
   assert.equal((html.match(/<\/script>/g) ?? []).length, 1)
   const { Script } = await import('node:vm')
   assert.doesNotThrow(() => new Script(html.match(/<script>([\s\S]*?)<\/script>/)[1]))
+})
+
+test('live board exposes log risk/blocker UI and hides resolved risks', () => {
+  let state = sampleState()
+  const live = renderBoardHtml(state, { endpoint: '/board/test', revision: 'revision' })
+  assert.match(live, /Log risk \/ blocker/)
+  assert.match(live, /id="log-dialog"/)
+  assert.match(live, /Understaffed/)
+  assert.match(live, /data-action="resolve"/)
+  assert.match(live, /save\('log'/)
+  assert.match(live, /save\('resolve'/)
+
+  const riskIndex = state.logs.findIndex((entry) => entry.type === 'risk')
+  state = resolveLog(state, { index: riskIndex })
+  const after = renderBoardHtml(state, { endpoint: '/board/test', revision: 'revision' }).split('<script>')[0]
+  assert.doesNotMatch(after, /Understaffed/)
+  assert.doesNotMatch(after, /Open risks \/ blockers/)
+  assert.equal(renderRisks(state, true), '')
 })

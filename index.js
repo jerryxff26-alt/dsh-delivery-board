@@ -218,24 +218,47 @@ export function apply(ctx, config) {
 
   register(
     defineTool({
+      name: 'delivery_resolve',
+      description: 'Mark an open risk or blocker log entry as resolved by its index in delivery.json logs',
+      parameters: {
+        log_index: { type: 'number', description: 'Zero-based index into the logs array', required: true },
+      },
+      output: textOutput,
+      isConcurrencySafe: () => false,
+      async execute(args, exec) {
+        const index = args.log_index
+        if (!Number.isInteger(index) || index < 0) throw new Error('log_index must be a non-negative integer')
+        let entry
+        await mutateState(ctx, exec, config.fileName, (state) => {
+          entry = state.logs[index]
+          return applyAction(state, 'resolve', { log_index: index })
+        })
+        return ok(`Resolved [${entry?.type ?? 'log'}] at index ${index}: ${entry?.text ?? ''}`)
+      },
+    }),
+  )
+
+  register(
+    defineTool({
       name: 'delivery_weekly',
-      description: 'Draft the client weekly report (Markdown): pipeline progress, handoffs, risks, next week',
+      description: 'Draft the client weekly report (Markdown): pipeline progress, handoffs, open risks; optional next-week notes',
       parameters: {
         week_label: { type: 'string', description: 'Report title label (optional; does not select the reporting dates)' },
         week_start: { type: 'string', description: 'First reporting date YYYY-MM-DD (inclusive, seven days in local time; defaults to Monday of the current week)' },
+        next_week: { type: 'string', description: 'Optional next-week notes (string or newline-separated list). When omitted or empty, the Next week section is omitted.' },
       },
       output: textOutput,
       isConcurrencySafe: () => true,
       async execute(args, exec) {
         const state = await loadOrThrow(ctx, exec, config.fileName)
-        return ok(renderWeekly(state, args.week_label ?? '', args.week_start))
+        return ok(renderWeekly(state, args.week_label ?? '', args.week_start, args.next_week ?? ''))
       },
     }),
   )
 
   register(defineTool({
     name: 'delivery_open',
-    description: 'Open an interactive loopback-only board: drag/move/edit/archive/restore save to delivery.json',
+    description: 'Open an interactive loopback-only board: drag/move/edit/archive/restore/log risk-blocker save to delivery.json',
     parameters: {}, output: textOutput, isConcurrencySafe: () => false,
     async execute(_args, exec) {
       const url = await boards.open(exec)

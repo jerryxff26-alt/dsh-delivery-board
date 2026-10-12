@@ -8,6 +8,13 @@ test('slash command supports discoverable help, precise move and archive syntax'
   assert.deepEqual(parseDeliveryCommand('board --archived'), { action: 'board', args: { include_archived: true } })
   assert.deepEqual(parseDeliveryCommand('archive c1'), { action: 'archive', args: { card_id: 'c1' } })
   assert.deepEqual(parseDeliveryCommand('weekly 2026-10-05'), { action: 'weekly', args: { week_start: '2026-10-05' } })
+  assert.deepEqual(parseDeliveryCommand('resolve 2'), { action: 'resolve', args: { log_index: 2 } })
+  assert.deepEqual(
+    parseDeliveryCommand('weekly {"week_start":"2026-10-05","next_week":"Ship SSO"}'),
+    { action: 'weekly', args: { week_start: '2026-10-05', next_week: 'Ship SSO' } },
+  )
+  assert.throws(() => parseDeliveryCommand('resolve'), /resolve <log_index>/)
+  assert.throws(() => parseDeliveryCommand('resolve c1'), /resolve <log_index>/)
 })
 
 test('slash command keeps JSON strings intact and never interprets shell syntax', () => {

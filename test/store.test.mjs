@@ -1,8 +1,14 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readState, stateExists, writeState } from '../lib/store.js'
+import { createProject } from '../lib/delivery.js'
+import { readState, stateExists, writeState, validateState } from '../lib/store.js'
 
-function fixture({ info, text = '{"customer":"Test"}' } = {}) {
+function validText(overrides = {}) {
+  const state = { ...createProject({ customer: 'Test' }), ...overrides }
+  return JSON.stringify(state)
+}
+
+function fixture({ info, text } = {}) {
   const calls = []
   const target = { targetKey: '/workspace/delivery.json', displayPath: 'delivery.json' }
   const signal = new AbortController().signal
@@ -11,7 +17,7 @@ function fixture({ info, text = '{"customer":"Test"}' } = {}) {
     fs: {
       async resolve(file, options) { calls.push(['resolve', file, options]); return target },
       async stat(t, s) { calls.push(['stat', t, s]); return info },
-      async readText(t, s) { calls.push(['readText', t, s]); return text },
+      async readText(t, s) { calls.push(['readText', t, s]); return text ?? validText() },
       async writeText(...args) { calls.push(['writeText', ...args]) },
     },
     emit(...args) { calls.push(['emit', ...args]) },
@@ -29,7 +35,9 @@ test('store resolves missing state relative to the session workspace', async () 
 
 test('store observes an existing file and preserves the execution context', async () => {
   const { ctx, exec, calls, target, signal } = fixture({ info: { type: 'file', version: 'v1' } })
-  assert.deepEqual(await readState(ctx, exec, 'delivery.json'), { customer: 'Test' })
+  const state = await readState(ctx, exec, 'delivery.json')
+  assert.equal(state.customer, 'Test')
+  assert.ok(Array.isArray(state.pipeline))
   assert.deepEqual(calls[2], ['readText', target, signal])
   assert.deepEqual(calls[3], ['emit', 'fs/observed', target, { kind: 'present', version: 'v1' }, exec])
   assert.equal(await stateExists(ctx, exec, 'delivery.json'), true)
@@ -39,7 +47,28 @@ test('store rejects directories and invalid JSON instead of starting over', asyn
   const directory = fixture({ info: { type: 'directory' } })
   await assert.rejects(readState(directory.ctx, directory.exec, 'delivery.json'), /not a file/)
   const invalid = fixture({ info: { type: 'file', version: 'v1' }, text: '{bad' })
-  await assert.rejects(readState(invalid.ctx, invalid.exec, 'delivery.json'), SyntaxError)
+  await assert.rejects(readState(invalid.ctx, invalid.exec, 'delivery.json'), /invalid JSON/)
+})
+
+test('store rejects corrupt shapes with clear path errors', async () => {
+  assert.throws(() => validateState({ customer: 'X' }, 'delivery.json'), /pipeline must be an array/)
+  assert.throws(() => validateState({
+    customer: 'X', pipeline: [{ id: 's1', name: 'S' }], cards: 'nope', logs: [],
+  }, 'delivery.json'), /cards must be an array/)
+  assert.throws(() => validateState({
+    customer: 'X',
+    pipeline: [{ id: 's1', name: 'S' }],
+    cards: [],
+    logs: [{ ts: '2026-01-01T00:00:00Z', type: 'nope', text: 'x' }],
+  }, 'delivery.json'), /logs\[0\]\.type must be one of/)
+  const ok = createProject({ customer: 'OK' })
+  assert.equal(validateState(ok), ok)
+
+  const corrupt = fixture({
+    info: { type: 'file', version: 'v1' },
+    text: JSON.stringify({ customer: 'X', pipeline: [], cards: [], logs: [] }),
+  })
+  await assert.rejects(readState(corrupt.ctx, corrupt.exec, 'delivery.json'), /pipeline must contain at least one stage/)
 })
 
 test('store uses the DSH writeText(target, content, expected, signal) contract', async () => {

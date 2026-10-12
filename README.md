@@ -36,8 +36,8 @@ Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
 
 - **Stage pipeline + cards** — each card has an owner, due date, acceptance criteria and Definition of Done (DoD).
 - **Handoff audit trail** — moving a card to another stage records who handed what to whom, automatically.
-- **Weekly report** — a Markdown client report: pipeline snapshot, this week's handoffs, and cumulative risk/blocker logs (no resolution status yet).
-- **Local editable board** — ask `/delivery Open the editable board`; the tool serves a mouse drag-and-drop board on `127.0.0.1` that saves back to the same delivery state. Archive/restore keeps history. Accessibility fallback: Edit → Stage.
+- **Weekly report** — a Markdown client report: pipeline snapshot, this week's handoffs, and open risk/blocker logs (resolved entries are omitted). Optional next-week notes; the section is omitted when empty.
+- **Local editable board** — ask `/delivery Open the editable board`; the tool serves a mouse drag-and-drop board on `127.0.0.1` that saves back to the same delivery state. Archive/restore keeps history; log and resolve open risks/blockers from the board. Accessibility fallback: Edit → Stage.
 - **Offline HTML snapshot** — a single read-only file teammates without DSH can open.
 
 ![Full-width editable delivery board showing all governance stages Plan→Live with synthetic ACME cards](docs/screenshots/board.jpg)
@@ -121,6 +121,7 @@ Fully custom stages are supported via the `stages` parameter. Gates are display-
 | `delivery_restore` | Return an archived card to its original stage |
 | `delivery_board_html` | Read-only standalone HTML snapshot |
 | `delivery_log` | Log progress / risk / blocker / decision |
+| `delivery_resolve` | Mark an open risk/blocker log entry resolved by index |
 | `delivery_weekly` | Client weekly report (Markdown) |
 
 ## Editable local board vs offline HTML
@@ -156,7 +157,7 @@ Implementation notes:
 
 - Plugin contract `name / inject / Config / apply`; tools via `defineTool`; the bundled `skills/delivery/SKILL.md` is registered through `ctx.skills.register`. Tool output renderers return `ContentBlock[]`.
 - Domain logic (`lib/delivery.js`) and the HTML renderer (`lib/board-html.js`) are pure functions; all writes go through `lib/store.js` and `ctx.fs`.
-- Weekly handoffs cover seven local-calendar days starting at `week_start` (default: Monday of the current week). Risks/blockers are cumulative (no resolution status yet).
+- Weekly handoffs cover seven local-calendar days starting at `week_start` (default: Monday of the current week). Open risks/blockers are listed; resolved entries are omitted. Pass `next_week` notes to include a Next week section (omitted when empty).
 - User content in HTML is escaped (covered by tests).
 
 ## Roadmap

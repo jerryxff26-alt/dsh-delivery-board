@@ -36,8 +36,8 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 - **阶段流水线 + 卡片**：每张卡有负责人、截止日期、验收标准和完成定义（DoD）。
 - **交接审计**：卡片跨阶段移动时自动记录交接（谁、从哪到哪、备注）。
-- **周报**：生成 Markdown 客户周报：流水线快照、本周交接、累计的风险/阻塞日志（暂不记录关闭状态）。
-- **本地可编辑看板**：`/delivery Open the editable board` 在 `127.0.0.1` 上提供鼠标拖拽看板（拖到其他阶段列即可移动），保存回同一份交付状态；归档/恢复保留历史。无障碍回退：编辑卡片里的 Stage。
+- **周报**：生成 Markdown 客户周报：流水线快照、本周交接、未关闭的风险/阻塞（已 resolve 的不展示）。可选填写下周计划；为空则省略该节。
+- **本地可编辑看板**：`/delivery Open the editable board` 在 `127.0.0.1` 上提供鼠标拖拽看板（拖到其他阶段列即可移动），保存回同一份交付状态；归档/恢复保留历史；可从看板记录并关闭风险/阻塞。无障碍回退：编辑卡片里的 Stage。
 - **离线 HTML 快照**：单个只读文件，没装 DSH 的同事也能打开。
 
 ![宽屏完整治理流水线看板（Plan→Live，虚构 ACME 卡片）](docs/screenshots/board.jpg)
@@ -108,6 +108,7 @@ Skill 从需求、代码和测试证据生成计划、卡片内容、验收标�
 | `delivery_archive` / `delivery_restore` | 归档 / 恢复到原阶段 |
 | `delivery_board_html` | 只读离线 HTML 快照 |
 | `delivery_log` | 记录进展 / 风险 / 阻塞 / 决策 |
+| `delivery_resolve` | 按 logs 下标将未关闭的风险/阻塞标记为已解决 |
 | `delivery_weekly` | 客户周报（Markdown） |
 
 ## 团队协作与安全
