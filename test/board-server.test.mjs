@@ -456,3 +456,15 @@ test('dispose aborts pending lifetime readiness and waits for socket closure wit
   server.finishListening()
   assert.equal(server.listening, false)
 })
+
+test('live board can toggle stage gates with revision guards', async () => {
+  const f = fixture()
+  const response = await f.post({
+    action: 'gate', args: { stage_id: 'analyze', gate_index: 0, done: true }, revision: f.revision(),
+  })
+  assert.equal(response.status, 200)
+  assert.equal(f.getState().pipeline.find((s) => s.id === 'analyze').gateDone[0], true)
+  const page = await f.call({ path: '/board/secret' })
+  assert.match(page.text, /gate-check/)
+  assert.match(page.text.split('<script>')[0], /checked/)
+})
