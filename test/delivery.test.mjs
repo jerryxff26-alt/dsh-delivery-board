@@ -9,6 +9,7 @@ import {
   restoreCard,
   updateCard,
   appendLog,
+  resolveLog,
   renderBoard,
   renderWeekly,
   TEMPLATES,
@@ -433,4 +434,60 @@ test('same-stage owner change records a decision, not a handoff, and stays out o
   const handed = moveCard(state, { cardId: 'c1', toStage: 'test', owner: 'erin' })
   assert.equal(handed.logs.at(-1).type, 'handoff')
   assert.match(handed.logs.at(-1).text, /Development → Testing/)
+})
+
+test('renderWeekly omits Next week when empty and includes optional next-week notes', () => {
+  const state = createProject({ customer: 'ACME' })
+  const bare = renderWeekly(state, 'Week', '2026-10-05')
+  assert.doesNotMatch(bare, /## Next week|TODO/)
+  assert.match(bare, /## Risks & blockers\n- none/)
+  const withNotes = renderWeekly(state, 'Week', '2026-10-05', 'Ship SSO\nClient demo')
+  assert.match(withNotes, /## Next week\n- Ship SSO\n- Client demo/)
+  const asArray = renderWeekly(state, 'Week', '2026-10-05', ['Prep UAT', '  '])
+  assert.match(asArray, /## Next week\n- Prep UAT\n/)
+  assert.doesNotMatch(asArray, /## Next week\n- Prep UAT\n-\n/)
+})
+
+test('resolveLog marks risk/blocker resolved; board and weekly only show open items', () => {
+  let state = createProject({ customer: 'ACME' })
+  state = addCard(state, { title: 'SSO', stage: 'dev' })
+  state = appendLog(state, { type: 'progress', text: 'Working', cardId: 'c1' })
+  state = appendLog(state, { type: 'risk', text: 'Understaffed', cardId: 'c1' })
+  state = appendLog(state, { type: 'blocker', text: 'Waiting on UAT', cardId: 'c1' })
+  // Legacy entry without resolvedAt stays open
+  state.logs.push({ ts: '2026-01-01T00:00:00Z', type: 'risk', text: 'Legacy open risk' })
+
+  assert.match(renderBoard(state), /Open risks \/ blockers · 3/)
+  assert.match(renderBoard(state), /Understaffed/)
+  assert.match(renderWeekly(state, '', '2026-10-05'), /Understaffed/)
+  assert.match(renderWeekly(state, '', '2026-10-05'), /Legacy open risk/)
+
+  const resolved = resolveLog(state, { index: 1 })
+  assert.notEqual(resolved, state)
+  assert.ok(resolved.logs[1].resolvedAt)
+  assert.equal(resolved.logs[1].resolvedAt, resolved.updatedAt)
+  assert.equal(resolved.logs[2].resolvedAt, undefined)
+  assert.doesNotMatch(renderBoard(resolved), /Understaffed/)
+  assert.match(renderBoard(resolved), /Open risks \/ blockers · 2/)
+  assert.match(renderBoard(resolved), /Waiting on UAT/)
+  assert.doesNotMatch(renderWeekly(resolved, '', '2026-10-05'), /Understaffed/)
+  assert.match(renderWeekly(resolved, '', '2026-10-05'), /Waiting on UAT/)
+
+  // Idempotent
+  assert.equal(resolveLog(resolved, { index: 1 }), resolved)
+  assert.throws(() => resolveLog(state, { index: 0 }), /not a risk or blocker/)
+  assert.throws(() => resolveLog(state, { index: 99 }), /unknown log index/)
+  assert.throws(() => resolveLog(state, { index: -1 }), /unknown log index/)
+  assert.throws(() => resolveLog(state, { index: 1.5 }), /unknown log index/)
+})
+
+test('applyAction resolve and log share the board/tool mutation path', async () => {
+  const { applyAction } = await import('../lib/actions.js')
+  let state = appendLog(createProject({ customer: 'ACME' }), { type: 'blocker', text: 'Blocked' })
+  state = applyAction(state, 'log', { type: 'risk', text: 'Schedule slip', card_id: 'c1' })
+  assert.equal(state.logs.length, 2)
+  state = applyAction(state, 'resolve', { log_index: 0 })
+  assert.ok(state.logs[0].resolvedAt)
+  assert.equal(state.logs[1].resolvedAt, undefined)
+  assert.throws(() => applyAction(state, 'resolve', { log_index: '0' }), /log_index must be a non-negative integer/)
 })

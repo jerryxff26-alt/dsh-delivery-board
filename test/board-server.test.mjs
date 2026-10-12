@@ -78,6 +78,35 @@ test('edit, archive and restore retain metadata, IDs and audit history', async (
   assert.equal(f.getState().logs.length, 3)
 })
 
+test('live board can log risks/blockers and resolve them with revision guards', async () => {
+  const f = fixture()
+  const logged = await f.post({
+    action: 'log',
+    args: { type: 'blocker', text: 'Waiting on UAT', card_id: 'c1' },
+    revision: f.revision(),
+  })
+  assert.equal(logged.status, 200)
+  assert.equal(f.getState().logs.at(-1).type, 'blocker')
+  assert.equal(f.getState().logs.at(-1).text, 'Waiting on UAT')
+  const index = f.getState().logs.length - 1
+  const page = await f.call({ path: '/board/secret' })
+  assert.match(page.text, /Log risk \/ blocker/)
+  assert.match(page.text, /Waiting on UAT/)
+  assert.match(page.text, /data-action="resolve"/)
+
+  const stale = f.revision()
+  const changed = f.getState()
+  changed.cards[0].owner = 'External editor'
+  f.externalEdit(JSON.stringify(changed, null, 2) + '\n')
+  assert.equal((await f.post({ action: 'resolve', args: { log_index: index }, revision: stale })).status, 409)
+
+  const resolved = await f.post({ action: 'resolve', args: { log_index: index }, revision: f.revision() })
+  assert.equal(resolved.status, 200)
+  assert.ok(f.getState().logs[index].resolvedAt)
+  const after = await f.call({ path: '/board/secret' })
+  assert.doesNotMatch(after.text.split('<script>')[0], /Waiting on UAT/)
+})
+
 test('invalid mutations leave JSON unchanged and never accept arbitrary document replacement', async () => {
   const f = fixture()
   const before = f.revision()

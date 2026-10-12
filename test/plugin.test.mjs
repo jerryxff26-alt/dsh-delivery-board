@@ -31,9 +31,9 @@ function fixture() {
   return { tools, commands, skills, exec, files, writes, signal }
 }
 
-test('all eleven tools render desktop-compatible text content blocks', () => {
+test('all twelve tools render desktop-compatible text content blocks', () => {
   const { tools } = fixture()
-  assert.equal(tools.size, 11)
+  assert.equal(tools.size, 12)
   for (const tool of tools.values()) {
     const content = tool.output.render({}, { text: 'test result' })
     assert.deepEqual(content, [{ type: 'text', text: 'test result' }], tool.name)
@@ -57,12 +57,19 @@ test('plugin tools complete init, card, handoff, log, board, HTML and weekly flo
   await call('delivery_move', { card_id: 'c1', to_stage: 'design', owner: 'tester-b', note: 'Reviewed' })
   await call('delivery_log', { type: 'blocker', text: 'Waiting on test UAT', card_id: 'c1' })
   assert.match((await call('delivery_board')).text, /SSO @tester-b/)
+  assert.match((await call('delivery_board')).text, /Waiting on test UAT/)
+  await call('delivery_resolve', { log_index: 1 })
+  assert.doesNotMatch((await call('delivery_board')).text, /Waiting on test UAT/)
   await call('delivery_board_html')
   assert.match(files.get('/workspace/delivery-board.html'), /<!DOCTYPE html>/)
-  assert.match((await call('delivery_weekly', { week_label: 'Test week' })).text, /Analyze → Design/)
+  const weekly = await call('delivery_weekly', { week_label: 'Test week', next_week: 'Ship SSO' })
+  assert.match(weekly.text, /Analyze → Design/)
+  assert.match(weekly.text, /## Next week\n- Ship SSO/)
+  assert.doesNotMatch(weekly.text, /TODO/)
   const state = JSON.parse(files.get('/workspace/delivery.json'))
   assert.equal(state.cards[0].stage, 'design')
   assert.deepEqual(state.logs.map((entry) => entry.type), ['handoff', 'blocker'])
+  assert.ok(state.logs[1].resolvedAt)
   for (const write of writes) {
     assert.ok(write.target.displayPath === 'delivery-board.html' ? write.expected === undefined : ['createIfAbsent', 'replaceIfVersion'].includes(write.expected?.kind))
     assert.equal(write.signal, signal, write.target.displayPath)
@@ -81,6 +88,7 @@ test('desktop weekly tool honors an explicit reporting period and rejects invali
   const result = await tools.get('delivery_weekly').execute({ week_start: '2026-10-05' }, exec)
   assert.match(result.text, /Selected week item/)
   assert.doesNotMatch(result.text, /Historical item/)
+  assert.doesNotMatch(result.text, /## Next week|TODO/)
   await assert.rejects(tools.get('delivery_weekly').execute({ week_start: '2026-02-30' }, exec), /week_start/)
 })
 
