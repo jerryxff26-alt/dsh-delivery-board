@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 
 import { createProject, addCard, archiveCard, moveCard, appendLog, resolveLog } from '../lib/delivery.js'
 import { renderBoardHtml } from '../lib/board-html.js'
-import { formatTimestamp, renderColumns, renderArchive, renderRisks } from '../lib/board-view.js'
+import { formatTimestamp, renderColumns, renderArchive, renderRisks, boardStrings } from '../lib/board-view.js'
 
 function sampleState() {
   let s = createProject({ customer: 'ACME <Group>', template: 'governance' })
@@ -117,8 +117,8 @@ test('English demo data keeps live, read-only and dynamic UI labels free of Chin
   for (const interactive of [false, true]) {
     const html = renderBoardHtml(state, interactive ? { endpoint: '/board/test', revision: 'revision' } : {})
     assert.match(html, /<html lang="en">/)
-    // The full page also embeds browser-only save, refresh, editor and copy labels.
-    assert.doesNotMatch(html, chinese)
+    // Visible chrome stays English under en locale; the script may embed a zh dictionary for runtime switching.
+    assert.doesNotMatch(html.split('<script>')[0], chinese)
     assert.match(html, /Unassigned/)
     const ui = { interactive, query: '', owner: '', limits: { design: 1 }, archiveLimit: 1 }
     const columns = renderColumns(state, ui)
@@ -136,7 +136,11 @@ test('English demo data keeps live, read-only and dynamic UI labels free of Chin
     assert.match(emptyArchive, /No matching archived cards/)
   }
   const timestamp = '2026-10-07T03:00:00Z'
-  assert.equal(formatTimestamp(timestamp), new Date(timestamp).toLocaleString('en-US', { hour12: false, timeZoneName: 'short' }))
+  assert.equal(formatTimestamp(timestamp, 'en-US'), new Date(timestamp).toLocaleString('en-US', { hour12: false, timeZoneName: 'short' }))
+  assert.equal(formatTimestamp(timestamp, 'zh-CN'), new Date(timestamp).toLocaleString('zh-CN', { hour12: false, timeZoneName: 'short' }))
+  assert.match(boardStrings('zh-CN').refresh, /刷新/)
+  assert.match(renderBoardHtml(state, { locale: 'zh-CN' }), /lang="zh-CN"/)
+  assert.match(renderBoardHtml(state, { locale: 'zh-CN' }), /刷新/)
 })
 
 test('bootstrap data cannot close the script or introduce executable user markup', async () => {
@@ -165,4 +169,13 @@ test('live board exposes log risk/blocker UI and hides resolved risks', () => {
   assert.doesNotMatch(after, /Understaffed/)
   assert.doesNotMatch(after, /Open risks \/ blockers/)
   assert.equal(renderRisks(state, true), '')
+})
+
+test('live board renders trackable gate checkboxes', () => {
+  const state = sampleState()
+  const live = renderBoardHtml(state, { endpoint: '/board/test', revision: 'revision' })
+  assert.match(live, /gate-check/)
+  assert.match(live, /data-action="gate"/)
+  assert.match(live, /save\('gate'/)
+  assert.match(live.split('<script>')[0], /Delivery state is saved/)
 })

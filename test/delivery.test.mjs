@@ -10,6 +10,10 @@ import {
   updateCard,
   appendLog,
   resolveLog,
+  setGateDone,
+  addStage,
+  updateStage,
+  removeStage,
   renderBoard,
   renderWeekly,
   TEMPLATES,
@@ -100,7 +104,7 @@ test('renderBoard shows gates and risks', () => {
   const board = renderBoard(s)
   assert.ok(board.includes('# ACME Delivery Board'))
   assert.ok(board.includes('## Development'))
-  assert.ok(board.includes('Gates: DoD met'))
+  assert.ok(board.includes('Gates: [ ] DoD met'))
   assert.ok(board.includes('[c1] SSO login @erin'))
   assert.ok(board.includes('Waiting on client UAT env'))
 })
@@ -490,4 +494,40 @@ test('applyAction resolve and log share the board/tool mutation path', async () 
   assert.ok(state.logs[0].resolvedAt)
   assert.equal(state.logs[1].resolvedAt, undefined)
   assert.throws(() => applyAction(state, 'resolve', { log_index: '0' }), /log_index must be a non-negative integer/)
+})
+
+test('setGateDone toggles trackable stage gates without blocking moves', () => {
+  let state = createProject({ customer: 'ACME', template: 'governance' })
+  state = addCard(state, { title: 'Feature', stage: 'build' })
+  const checked = setGateDone(state, { stageId: 'build', gateIndex: 0, done: true })
+  assert.deepEqual(checked.pipeline.find((s) => s.id === 'build').gateDone, [true, false])
+  assert.match(renderBoard(checked), /\[x\] Code review passed/)
+  assert.match(renderBoard(checked), /\[ \] DoD met/)
+  // Moves still work with incomplete gates.
+  assert.equal(moveCard(checked, { cardId: 'c1', toStage: 'test' }).cards[0].stage, 'test')
+  assert.equal(setGateDone(checked, { stageId: 'build', gateIndex: 0, done: true }), checked)
+  assert.throws(() => setGateDone(state, { stageId: 'build', gateIndex: 9 }), /unknown gate index/)
+  assert.throws(() => setGateDone(state, { stageId: 'nope', gateIndex: 0 }), /unknown stage/)
+})
+
+test('pipeline stages can be added, updated and removed safely after init', () => {
+  let state = createProject({ customer: 'ACME', template: 'governance' })
+  state = addCard(state, { title: 'On build', stage: 'build' })
+  const added = addStage(state, { name: 'Hardening', after: 'test', role: 'Sec', gates: ['Scan clean'] })
+  assert.equal(added.template, 'custom')
+  assert.ok(added.pipeline.some((s) => s.id === 'hardening' && s.name === 'Hardening'))
+  assert.match(added.logs.at(-1).text, /Stage "Hardening"/)
+
+  const renamed = updateStage(added, { stageId: 'hardening', name: 'Security Hardening', gates: ['Scan clean', 'Sign-off'] })
+  assert.equal(renamed.pipeline.find((s) => s.id === 'hardening').name, 'Security Hardening')
+  assert.deepEqual(renamed.pipeline.find((s) => s.id === 'hardening').gates, ['Scan clean', 'Sign-off'])
+
+  assert.throws(() => removeStage(added, { stageId: 'build' }), /still has 1 card/)
+  const migrated = removeStage(added, { stageId: 'build', migrateTo: 'test' })
+  assert.equal(migrated.cards[0].stage, 'test')
+  assert.equal(migrated.pipeline.some((s) => s.id === 'build'), false)
+  const emptied = removeStage(migrated, { stageId: 'hardening' })
+  assert.equal(emptied.pipeline.some((s) => s.id === 'hardening'), false)
+  const only = createProject({ customer: 'X', stages: [{ name: 'Solo' }] })
+  assert.throws(() => removeStage(only, { stageId: only.pipeline[0].id }), /last stage/)
 })

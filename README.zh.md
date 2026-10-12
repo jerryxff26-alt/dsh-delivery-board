@@ -34,10 +34,10 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 ## 你能得到什么
 
-- **阶段流水线 + 卡片**：每张卡有负责人、截止日期、验收标准和完成定义（DoD）。
+- **阶段流水线 + 卡片**：每张卡有负责人、截止日期、验收标准和完成定义（DoD）。初始化后仍可增删改阶段（删除时若该阶段仍有卡片，需先 `migrate_to` 迁走）。
 - **交接审计**：卡片跨阶段移动时自动记录交接（谁、从哪到哪、备注）。
 - **周报**：生成 Markdown 客户周报：流水线快照、本周交接、未关闭的风险/阻塞（已 resolve 的不展示）。可选填写下周计划；为空则省略该节。
-- **本地可编辑看板**：`/delivery Open the editable board` 在 `127.0.0.1` 上提供鼠标拖拽看板（拖到其他阶段列即可移动），保存回同一份交付状态；归档/恢复保留历史；可从看板记录并关闭风险/阻塞。无障碍回退：编辑卡片里的 Stage。
+- **本地可编辑看板**：`/delivery Open the editable board` 在 `127.0.0.1` 上提供鼠标拖拽看板，保存回同一份交付状态；归档/恢复、风险/阻塞记录，以及可勾选的关卡清单均可在看板操作。无障碍回退：编辑卡片里的 Stage。看板界面文案会跟随浏览器语言（中文环境优先 zh-CN）。
 - **离线 HTML 快照**：单个只读文件，没装 DSH 的同事也能打开。
 
 ![宽屏完整治理流水线看板（Plan→Live，虚构 ACME 卡片）](docs/screenshots/board.jpg)
@@ -51,49 +51,31 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 </details>
 
-*截图在普通笔记本视口（约 1440×900）下截取：列更紧凑，Plan→Live 尽量一屏可见、无需横向滚动。*
+## 快速开始
 
-## 使用
-
-### 模型驱动的 Skill（常规入口）
-
-插件内置并自动注册 `delivery` skill，不需要另行复制或安装。输入 `/delivery` 加自然语言目标，由 DSH 加载提示词并交给模型分析，而不是按 JSON 命令直接执行。
-
-```text
-/delivery Review this repository and propose a delivery plan for ACME from its requirements and tests.
-/delivery Create the cards from the approved plan; leave unknown owners and dates unset.
-/delivery Hand off the API integration card to Test and summarize the available evidence.
-/delivery Open the editable board.
-/delivery Prepare the client weekly report for the week starting 2026-10-05.
+```bash
+dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 ```
 
-Skill 从需求、代码和测试证据生成计划、卡片内容、验收标准与 DoD；批量创建前先确认方案。原有 `delivery_*` 工具负责校验、保存、审计和渲染：**模型负责推理，工具负责落盘**。`delivery_init` 本身仍然是确定性初始化，后续卡片由 Skill 编排工具创建。不直接改写 JSON，也不改变已有数据格式。
-
-### 高级直接操作（不调用模型）
-
-原来的原生命令改名为 `/delivery-admin`，避免抢占 Skill 的 `/delivery` 入口。已有直接命令和脚本只需更换前缀；数据无需迁移。
+然后在会话里：
 
 ```text
-/delivery-admin help
-/delivery-admin init {"customer":"Demo","template":"governance"}
-/delivery-admin board
-/delivery-admin open
-/delivery-admin move c1 test
-/delivery-admin archive c1
-/delivery-admin restore c1
-/delivery-admin html
+/delivery Initialize a governance delivery board for ACME
+/delivery Open the editable board
 ```
 
-本地链接开发更新后，完整退出并重新打开 DSH，确认插件为 **Running**。需要 DSH 的 `skills` 服务与 `tool-skill` 加载器；已安装的 0.2.0-rc.2 SDK 支持这些接口。`/delivery` 对应 Skill，`/delivery-admin` 对应确定性命令。
+高级、确定性命令（不经过模型）：`/delivery-admin help`。
 
-## 流水线模板
+## Skill 与工具
+
+`/delivery` skill 会先读仓库上下文、找缺口，再提出阶段与卡片方案；得到确认后才通过 `delivery_*` 工具写入。**模型负责推理；工具负责落盘。**
 
 | 模板 | 阶段 | 关卡 |
 |---|---|---|
 | `default`（ToB 交付流水线） | Client Requirements → BA Analysis → TL Design → Development → Testing → DevSecOps Launch → Live | 每阶段 1–2 个（如验收标准冻结、安全扫描通过） |
 | `governance`（治理型交付流水线） | Plan → Analyze → Design → Build → Test → Deploy → Live | 侧重质量/风险/安全签核（如回滚方案就绪） |
 
-可通过 `stages` 参数完全自定义阶段。v0.1 中关卡仅展示，由人工确认。
+可通过 `stages` 参数完全自定义阶段。关卡是**可勾选跟踪的清单**，持久化在交付状态中，**不会强制拦截**卡片移动。
 
 ## 工具
 
@@ -109,11 +91,13 @@ Skill 从需求、代码和测试证据生成计划、卡片内容、验收标�
 | `delivery_board_html` | 只读离线 HTML 快照 |
 | `delivery_log` | 记录进展 / 风险 / 阻塞 / 决策 |
 | `delivery_resolve` | 按 logs 下标将未关闭的风险/阻塞标记为已解决 |
+| `delivery_gate` | 勾选/切换阶段关卡清单项（可跟踪，非硬拦截） |
+| `delivery_stage_add` / `delivery_stage_update` / `delivery_stage_remove` | 初始化后演进流水线（有卡片时删除需 `migrate_to`） |
 | `delivery_weekly` | 客户周报（Markdown） |
 
 ## 团队协作与安全
 
-- 交付状态落盘为仓库内的 `delivery.json`，提交到团队共享 git 仓库后 `git pull/push` 即可同步；并发修改仍需正常解决冲突。
+- 交付状态默认落盘为仓库内文件（默认名 `delivery.json`，可配置），提交到团队共享 git 仓库后 `git pull/push` 即可同步；并发修改仍需正常解决冲突。
 - 本地看板只绑定 `127.0.0.1`、随机端口和不可猜测的路径；URL 仅限本机使用，DSH 退出或插件卸载后失效。
 - 页面数据过期时不会静默覆盖，需要点 **Refresh** 后重试。
 
@@ -122,10 +106,40 @@ Skill 从需求、代码和测试证据生成计划、卡片内容、验收标�
 ```bash
 npm install
 npm run check
-npm test
+npm test               # 领域、HTML、命令、存储、HTTP、插件与 skill 测试
+npm run test:desktop   # 可选：再加桌面 SDK 上的 skill 注册/加载测试
 ```
 
-更多细节（本地桌面开发、实现说明、已知限制）见 [English README](README.md)。
+本地桌面开发（macOS，已在 DSH 0.2.0-rc.2 验证）：
+
+```bash
+DSH_CLI="/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh"
+"$DSH_CLI" plugin --profile desktop add "link:$PWD" --offline --ignore-scripts
+```
+
+安装或改动 link 插件后请完全退出并重开 DSH，确认 **Plugins → dsh-delivery-board** 为 **Running**。`--dump-config` 适用于 CLI 管理的 profile（如 `web`），不适用于 desktop profile。若应用路径不同，可设 `DSH_DESKTOP_APP`。
+
+### 实现说明
+
+- 插件契约 `name / inject / Config / apply`；工具经 `defineTool`；捆绑的 `skills/delivery/SKILL.md` 经 `ctx.skills.register` 注册。工具输出渲染为 `ContentBlock[]`。
+- 领域逻辑（`lib/delivery.js`）与 HTML 渲染（`lib/board-html.js`）为纯函数；写入都走 `lib/store.js` 与 `ctx.fs`。
+- 周报交接覆盖从 `week_start` 起连续七个本地日历日（默认本周一）。仅列出未关闭风险/阻塞；`next_week` 有内容时才输出「下周」节。
+- 阶段关卡为可跟踪清单（`gateDone`），**不**拦截移动。
+- 初始化后可用工具或 `/delivery-admin` 增删改阶段；删除仍有卡片的阶段必须提供 `migrate_to`。
+- HTML 中用户内容均转义（有测试覆盖）。
+
+## 路线图
+
+- 把可编辑看板嵌进 DSH，而不是本地 URL
+- 可强制拦截移动的硬关卡、多项目汇总
+- 周报与工具消息的更完整 i18n（看板界面已跟随浏览器语言）
+
+## 已知限制
+
+- DSH 为开发者预览。Peer 范围：`@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`，`@deepseek-ai/schemastery ~3.18.4`；目前仅验证过 0.2.0-rc.2。
+- 无甘特排期、自动批量归档、硬拦截关卡或实时多用户同步。
+- 拖拽（以及编辑 → 阶段回退）在本地浏览器 harness 中检查过；不做完整键盘/移动端/WCAG 声明。
+- 关卡清单只是进度跟踪；移动卡片不要求关卡全部勾选。
 
 ## 许可证
 

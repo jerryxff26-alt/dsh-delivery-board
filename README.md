@@ -34,10 +34,10 @@ Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
 
 ## What you get
 
-- **Stage pipeline + cards** — each card has an owner, due date, acceptance criteria and Definition of Done (DoD).
+- **Stage pipeline + cards** — each card has an owner, due date, acceptance criteria and Definition of Done (DoD). Stages can be added, renamed or removed after init (removing refuses while cards remain unless you migrate them).
 - **Handoff audit trail** — moving a card to another stage records who handed what to whom, automatically.
 - **Weekly report** — a Markdown client report: pipeline snapshot, this week's handoffs, and open risk/blocker logs (resolved entries are omitted). Optional next-week notes; the section is omitted when empty.
-- **Local editable board** — ask `/delivery Open the editable board`; the tool serves a mouse drag-and-drop board on `127.0.0.1` that saves back to the same delivery state. Archive/restore keeps history; log and resolve open risks/blockers from the board. Accessibility fallback: Edit → Stage.
+- **Local editable board** — ask `/delivery Open the editable board`; the tool serves a mouse drag-and-drop board on `127.0.0.1` that saves back to the same delivery state. Archive/restore, risk/blocker logging, and trackable gate checklists are available on the board. Accessibility fallback: Edit → Stage. Board chrome follows the browser locale (zh-CN when appropriate).
 - **Offline HTML snapshot** — a single read-only file teammates without DSH can open.
 
 ![Full-width editable delivery board showing all governance stages Plan→Live with synthetic ACME cards](docs/screenshots/board.jpg)
@@ -105,7 +105,7 @@ For linked desktop development, fully quit and reopen DSH after updating the plu
 | `default` (ToB Delivery Pipeline) | Client Requirements → BA Analysis → TL Design → Development → Testing → DevSecOps Launch → Live | 1–2 per stage (e.g. acceptance criteria frozen, security scan passed) |
 | `governance` (Governance Pipeline) | Plan → Analyze → Design → Build → Test → Deploy → Live | Quality / risk / security sign-offs (e.g. rollback plan ready) |
 
-Fully custom stages are supported via the `stages` parameter. Gates are display-only (human-confirmed) in v0.1.
+Fully custom stages are supported via the `stages` parameter. Gates are trackable checklists (persisted as gateDone); they do not hard-block card moves.
 
 ## Tools
 
@@ -122,6 +122,8 @@ Fully custom stages are supported via the `stages` parameter. Gates are display-
 | `delivery_board_html` | Read-only standalone HTML snapshot |
 | `delivery_log` | Log progress / risk / blocker / decision |
 | `delivery_resolve` | Mark an open risk/blocker log entry resolved by index |
+| `delivery_gate` | Toggle/set a stage gate checklist item (trackable, not a hard blocker) |
+| `delivery_stage_add` / `delivery_stage_update` / `delivery_stage_remove` | Evolve the pipeline after init (remove requires `migrate_to` if cards remain) |
 | `delivery_weekly` | Client weekly report (Markdown) |
 
 ## Editable local board vs offline HTML
@@ -158,19 +160,22 @@ Implementation notes:
 - Plugin contract `name / inject / Config / apply`; tools via `defineTool`; the bundled `skills/delivery/SKILL.md` is registered through `ctx.skills.register`. Tool output renderers return `ContentBlock[]`.
 - Domain logic (`lib/delivery.js`) and the HTML renderer (`lib/board-html.js`) are pure functions; all writes go through `lib/store.js` and `ctx.fs`.
 - Weekly handoffs cover seven local-calendar days starting at `week_start` (default: Monday of the current week). Open risks/blockers are listed; resolved entries are omitted. Pass `next_week` notes to include a Next week section (omitted when empty).
+- Stage gates are **trackable checklists** persisted on each stage (`gateDone`); they do **not** block card moves.
+- Pipeline stages can be added/updated/removed after init via tools or `/delivery-admin`. Removing a stage with cards requires `migrate_to`.
 - User content in HTML is escaped (covered by tests).
 
 ## Roadmap
 
 - Embed the editable board inside DSH instead of a local URL
-- Enforced gate checklists, multi-project rollup
-- i18n for board, reports and tool messages
+- Enforced (hard) gate checklists that can block moves, multi-project rollup
+- Fuller i18n for reports and tool messages (board chrome already follows browser locale)
 
 ## Known limitations
 
 - DSH is a developer preview. Peer range: `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`, `@deepseek-ai/schemastery ~3.18.4`; only 0.2.0-rc.2 has been tested.
-- No Gantt scheduling, automatic bulk archive, enforced gates or realtime multi-user sync.
+- No Gantt scheduling, automatic bulk archive, hard move-blocking gates or realtime multi-user sync.
 - Drag/drop (and Edit → Stage fallback) are checked in a local browser harness; no full keyboard/mobile/WCAG claim.
+- Gate checklists are trackable progress only; moving a card does not require gates to be checked.
 
 ## License
 

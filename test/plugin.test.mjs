@@ -31,9 +31,9 @@ function fixture() {
   return { tools, commands, skills, exec, files, writes, signal }
 }
 
-test('all twelve tools render desktop-compatible text content blocks', () => {
+test('all sixteen tools render desktop-compatible text content blocks', () => {
   const { tools } = fixture()
-  assert.equal(tools.size, 12)
+  assert.equal(tools.size, 16)
   for (const tool of tools.values()) {
     const content = tool.output.render({}, { text: 'test result' })
     assert.deepEqual(content, [{ type: 'text', text: 'test result' }], tool.name)
@@ -70,6 +70,14 @@ test('plugin tools complete init, card, handoff, log, board, HTML and weekly flo
   assert.equal(state.cards[0].stage, 'design')
   assert.deepEqual(state.logs.map((entry) => entry.type), ['handoff', 'blocker'])
   assert.ok(state.logs[1].resolvedAt)
+  await call('delivery_gate', { stage_id: 'design', gate_index: 0, done: true })
+  await call('delivery_stage_add', { name: 'Hardening', after: 'test', gates: ['Scan clean'] })
+  await call('delivery_stage_update', { stage_id: 'hardening', name: 'Sec Hardening' })
+  await assert.rejects(call('delivery_stage_remove', { stage_id: 'design' }), /still has/)
+  await call('delivery_stage_remove', { stage_id: 'hardening' })
+  const afterPipeline = JSON.parse(files.get('/workspace/delivery.json'))
+  assert.ok(afterPipeline.pipeline.find((s) => s.id === 'design').gateDone[0])
+  assert.equal(afterPipeline.pipeline.some((s) => s.id === 'hardening'), false)
   for (const write of writes) {
     assert.ok(write.target.displayPath === 'delivery-board.html' ? write.expected === undefined : ['createIfAbsent', 'replaceIfVersion'].includes(write.expected?.kind))
     assert.equal(write.signal, signal, write.target.displayPath)

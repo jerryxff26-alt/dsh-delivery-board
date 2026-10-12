@@ -2,7 +2,7 @@
 //
 // A shared delivery board for ToB delivery teams: role pipeline, card flow,
 // handoff audit trail, weekly report and a local visual board.
-// State lives in delivery.json inside the team's shared git repo (offline-friendly).
+// Shared delivery state lives in the team's git repo (offline-friendly; default file configurable).
 //
 // Plugin contract (per deepseek-ai/deepseek-harness official docs and the community
 // tested guide):
@@ -67,8 +67,8 @@ export function apply(ctx, config) {
     text: [
       'Codebase-native delivery: use the delivery skill for repository-grounded planning, acceptance criteria, handoffs and reporting.',
       'The /delivery skill is model-led. Load it before delivery task actions when it is available in the skill catalog; explicit /delivery invocations already include its instructions.',
-      'Use the delivery_* tools to read and mutate shared state. /delivery-admin help is the advanced, deterministic command escape hatch, not the normal skill workflow.',
-      `State lives in ${config.fileName} at the session workspace root. ${config.boardFile} is a read-only export; delivery_open returns the editable machine-local board URL.`,
+      'Use the delivery_* tools to read and mutate shared delivery state. /delivery-admin help is the advanced, deterministic command escape hatch, not the normal skill workflow.',
+      `Delivery state is stored at the session workspace root (default file ${config.fileName}). ${config.boardFile} is a read-only export; delivery_open returns the editable machine-local board URL.`,
     ].join('\n'),
   })
 
@@ -219,7 +219,7 @@ export function apply(ctx, config) {
   register(
     defineTool({
       name: 'delivery_resolve',
-      description: 'Mark an open risk or blocker log entry as resolved by its index in delivery.json logs',
+      description: 'Mark an open risk or blocker log entry as resolved by its index in the delivery state logs',
       parameters: {
         log_index: { type: 'number', description: 'Zero-based index into the logs array', required: true },
       },
@@ -258,7 +258,7 @@ export function apply(ctx, config) {
 
   register(defineTool({
     name: 'delivery_open',
-    description: 'Open an interactive loopback-only board: drag/move/edit/archive/restore/log risk-blocker save to delivery.json',
+    description: 'Open an interactive loopback-only board: drag/move/edit/archive/restore/log/gate checklists save to delivery state',
     parameters: {}, output: textOutput, isConcurrencySafe: () => false,
     async execute(_args, exec) {
       const url = await boards.open(exec)
@@ -280,6 +280,81 @@ export function apply(ctx, config) {
       const patch = args.due === '' ? { ...args, due: null } : args
       await mutateState(ctx, exec, config.fileName, (state) => applyAction(state, 'update', patch))
       return ok(`Card updated [${args.card_id}]`)
+    },
+  }))
+
+  register(defineTool({
+    name: 'delivery_gate',
+    description: 'Toggle or set a stage gate checklist item (trackable; does not block moves)',
+    parameters: {
+      stage_id: { type: 'string', required: true, description: 'Stage id' },
+      gate_index: { type: 'number', required: true, description: 'Zero-based index into the stage gates list' },
+      done: { type: 'boolean', description: 'Explicit checked state; omit to toggle' },
+    },
+    output: textOutput, isConcurrencySafe: () => false,
+    async execute(args, exec) {
+      if (!Number.isInteger(args.gate_index) || args.gate_index < 0) throw new Error('gate_index must be a non-negative integer')
+      let label
+      await mutateState(ctx, exec, config.fileName, (state) => {
+        const stage = state.pipeline.find((s) => s.id === args.stage_id)
+        label = stage?.gates?.[args.gate_index]
+        return applyAction(state, 'gate', args)
+      })
+      return ok(`Gate updated on ${args.stage_id}: ${label ?? args.gate_index}`)
+    },
+  }))
+
+  register(defineTool({
+    name: 'delivery_stage_add',
+    description: 'Add a pipeline stage after init (marks template custom). Optional after=stage_id to insert.',
+    parameters: {
+      name: { type: 'string', required: true, description: 'Stage name' },
+      role: { type: 'string', description: 'Owning role' },
+      gates: { type: 'array', items: { type: 'string' }, description: 'Gate checklist labels' },
+      id: { type: 'string', description: 'Optional stage id (auto-generated from name when omitted)' },
+      after: { type: 'string', description: 'Insert after this stage id (append when omitted)' },
+    },
+    output: textOutput, isConcurrencySafe: () => false,
+    async execute(args, exec) {
+      let addedId
+      const { state } = await mutateState(ctx, exec, config.fileName, (state) => {
+        const before = new Set(state.pipeline.map((s) => s.id))
+        const next = applyAction(state, 'stage_add', args)
+        addedId = next.pipeline.find((s) => !before.has(s.id))?.id
+        return next
+      })
+      const added = state.pipeline.find((s) => s.id === addedId)
+      return ok(`Stage added [${added.id}] ${added.name}`)
+    },
+  }))
+
+  register(defineTool({
+    name: 'delivery_stage_update',
+    description: 'Rename a stage or replace its role / gate labels after init',
+    parameters: {
+      stage_id: { type: 'string', required: true, description: 'Stage id' },
+      name: { type: 'string', description: 'New stage name' },
+      role: { type: 'string', description: 'New owning role' },
+      gates: { type: 'array', items: { type: 'string' }, description: 'Replace gate checklist labels (check state kept by index)' },
+    },
+    output: textOutput, isConcurrencySafe: () => false,
+    async execute(args, exec) {
+      await mutateState(ctx, exec, config.fileName, (state) => applyAction(state, 'stage_update', args))
+      return ok(`Stage updated [${args.stage_id}]`)
+    },
+  }))
+
+  register(defineTool({
+    name: 'delivery_stage_remove',
+    description: 'Remove a pipeline stage. Refuses if cards remain on it unless migrate_to is set.',
+    parameters: {
+      stage_id: { type: 'string', required: true, description: 'Stage id to remove' },
+      migrate_to: { type: 'string', description: 'Move cards on the removed stage to this stage id first' },
+    },
+    output: textOutput, isConcurrencySafe: () => false,
+    async execute(args, exec) {
+      await mutateState(ctx, exec, config.fileName, (state) => applyAction(state, 'stage_remove', args))
+      return ok(`Stage removed [${args.stage_id}]`)
     },
   }))
 
