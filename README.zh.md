@@ -17,7 +17,7 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 桌面版：在插件管理中安装同一个 GitHub 来源 `github:jerryxff26-alt/dsh-delivery-board`。（上面的 CLI 命令已验证；桌面插件管理流程未单独验证。）
 
-已在 DSH **0.2.0-rc.2**（开发者预览版）上测试，无运行时依赖。
+已在 DSH **0.2.1-rc.2**（开发者预览版；亦兼容 **0.2.0-rc.2**）上测试，无运行时依赖。通过 `engines.dsh` 声明供 DSH 0.2.1+ 做兼容性检查。
 
 ## 演示
 
@@ -110,7 +110,7 @@ npm test               # 领域、HTML、命令、存储、HTTP、插件与 skil
 npm run test:desktop   # 可选：再加桌面 SDK 上的 skill 注册/加载测试
 ```
 
-本地桌面开发（macOS，已在 DSH 0.2.0-rc.2 验证）：
+本地桌面开发（macOS，已在 DSH 0.2.1-rc.2 验证）：
 
 ```bash
 DSH_CLI="/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh"
@@ -136,7 +136,7 @@ DSH_CLI="/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/d
 
 ## 已知限制
 
-- DSH 为开发者预览。Peer 范围：`@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`，`@deepseek-ai/schemastery ~3.18.4`；目前仅验证过 0.2.0-rc.2。
+- DSH 为开发者预览。兼容声明：`engines.dsh >=0.2.0-rc.2 <0.3.0`（DSH 0.2.1+ 优先读取）；peers `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`、`@deepseek-ai/schemastery ~3.18.5`（由宿主提供，optional）。已在 0.2.1-rc.2 冒烟验证；此前在 0.2.0-rc.2 验证过。
 - 无甘特排期、自动批量归档、硬拦截关卡或实时多用户同步。
 - 拖拽（以及编辑 → 阶段回退）在本地浏览器 harness 中检查过；不做完整键盘/移动端/WCAG 声明。
 - 关卡清单只是进度跟踪；移动卡片不要求关卡全部勾选。

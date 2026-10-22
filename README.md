@@ -17,7 +17,7 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 Desktop app: install the same GitHub spec, `github:jerryxff26-alt/dsh-delivery-board`, from the plugin manager. (The CLI command above is the verified path; the desktop plugin-manager flow has not been separately verified.)
 
-Tested with DSH **0.2.0-rc.2** (developer preview). No runtime dependencies.
+Tested with DSH **0.2.1-rc.2** (developer preview; also compatible with **0.2.0-rc.2**). No runtime dependencies. Declares `engines.dsh` for DSH 0.2.1+ compatibility checks.
 
 ## Demo
 
@@ -96,7 +96,7 @@ The former native `/delivery` command is now **`/delivery-admin`**, so it cannot
 
 </details>
 
-For linked desktop development, fully quit and reopen DSH after updating the plugin. It needs DSH's `skills` service and `tool-skill` loader (supported by the tested 0.2.0-rc.2 runtime). Confirm the plugin shows **Running**. `/delivery <request>` is handled as a skill; `/delivery-admin` uses the direct command handler.
+For linked desktop development, fully quit and reopen DSH after updating the plugin. It needs DSH's `skills` service and `tool-skill` loader (supported by the tested 0.2.1-rc.2 runtime). Confirm the plugin shows **Running**. `/delivery <request>` is handled as a skill; `/delivery-admin` uses the direct command handler.
 
 ## Pipeline templates
 
@@ -146,7 +146,7 @@ npm test               # domain, HTML, commands, storage, HTTP, plugin and skill
 npm run test:desktop   # optional: plugin tests plus real skill registry/loader/routing tests from the installed macOS SDK
 ```
 
-Local desktop development (macOS, tested with DSH 0.2.0-rc.2):
+Local desktop development (macOS, tested with DSH 0.2.1-rc.2):
 
 ```bash
 DSH_CLI="/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh"
@@ -172,7 +172,7 @@ Implementation notes:
 
 ## Known limitations
 
-- DSH is a developer preview. Peer range: `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`, `@deepseek-ai/schemastery ~3.18.4`; only 0.2.0-rc.2 has been tested.
+- DSH is a developer preview. Compatibility: `engines.dsh >=0.2.0-rc.2 <0.3.0` (preferred by DSH 0.2.1+); peers `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`, `@deepseek-ai/schemastery ~3.18.5` (host-provided, optional). Smoke-tested on 0.2.1-rc.2; previously verified on 0.2.0-rc.2.
 - No Gantt scheduling, automatic bulk archive, hard move-blocking gates or realtime multi-user sync.
 - Drag/drop (and Edit → Stage fallback) are checked in a local browser harness; no full keyboard/mobile/WCAG claim.
 - Gate checklists are trackable progress only; moving a card does not require gates to be checked.
