@@ -36,7 +36,8 @@ Tested with DSH **0.2.1-rc.2** (developer preview; also compatible with **0.2.0-
 
 - **Stage pipeline + cards** — each card has an owner, due date, acceptance criteria and Definition of Done (DoD). Stages can be added, renamed or removed after init (removing refuses while cards remain unless you migrate them).
 - **Handoff audit trail** — moving a card to another stage records who handed what to whom, automatically.
-- **Weekly report** — a Markdown client report: pipeline snapshot, this week's handoffs, and open risk/blocker logs (resolved entries are omitted). Optional next-week notes; the section is omitted when empty.
+- **Weekly report** — a Markdown client report: pipeline snapshot, **shipped this week** (arrived at the terminal stage or archived), handoffs, open risks, and **risks resolved this week**. Optional `next_week` notes appear as **Next bets** (omitted when empty).
+- **Soft WIP limits** — optional per-stage `wipLimit` (Kanban-style). The board and move responses warn when a stage is over; moves are never blocked.
 - **Local editable board** — ask `/delivery Open the editable board`; the tool serves a mouse drag-and-drop board on `127.0.0.1` that saves back to the same delivery state. Archive/restore, risk/blocker logging, and trackable gate checklists are available on the board. Accessibility fallback: Edit → Stage. Board chrome follows the browser locale (zh-CN when appropriate).
 - **Offline HTML snapshot** — a single read-only file teammates without DSH can open.
 
@@ -123,8 +124,8 @@ Fully custom stages are supported via the `stages` parameter. Gates are trackabl
 | `delivery_log` | Log progress / risk / blocker / decision |
 | `delivery_resolve` | Mark an open risk/blocker log entry resolved by index |
 | `delivery_gate` | Toggle/set a stage gate checklist item (trackable, not a hard blocker) |
-| `delivery_stage_add` / `delivery_stage_update` / `delivery_stage_remove` | Evolve the pipeline after init (remove requires `migrate_to` if cards remain) |
-| `delivery_weekly` | Client weekly report (Markdown) |
+| `delivery_stage_add` / `delivery_stage_update` / `delivery_stage_remove` | Evolve the pipeline after init (remove requires `migrate_to` if cards remain; stages accept optional soft `wip_limit`) |
+| `delivery_weekly` | Client weekly report (Markdown): shipped / handoffs / open & resolved risks / next bets |
 
 ## Editable local board vs offline HTML
 
@@ -159,23 +160,34 @@ Implementation notes:
 
 - Plugin contract `name / inject / Config / apply`; tools via `defineTool`; the bundled `skills/delivery/SKILL.md` is registered through `ctx.skills.register`. Tool output renderers return `ContentBlock[]`.
 - Domain logic (`lib/delivery.js`) and the HTML renderer (`lib/board-html.js`) are pure functions; all writes go through `lib/store.js` and `ctx.fs`.
-- Weekly handoffs cover seven local-calendar days starting at `week_start` (default: Monday of the current week). Open risks/blockers are listed; resolved entries are omitted. Pass `next_week` notes to include a Next week section (omitted when empty).
+- Weekly reports cover seven local-calendar days starting at `week_start` (default: Monday of the current week). **Shipped** = handoffs into the terminal pipeline stage or archives in that window; open risks are listed; **Risks resolved this week** uses `resolvedAt` in the window. Pass `next_week` notes to include a **Next bets** section (omitted when empty).
 - Stage gates are **trackable checklists** persisted on each stage (`gateDone`); they do **not** block card moves.
+- Soft **WIP limits** (`wipLimit` / tool field `wip_limit`) are optional per stage; over-limit stages warn on the board and after moves, but never refuse a move.
 - Pipeline stages can be added/updated/removed after init via tools or `/delivery-admin`. Removing a stage with cards requires `migrate_to`.
 - User content in HTML is escaped (covered by tests).
+
+## Practice notes (lightweight)
+
+Drawn from delivery practices that fit an in-repo board without becoming a PM suite:
+
+- **Kanban soft WIP** — set `wip_limit` on busy stages so overload is visible.
+- **Weekly shipped / next bets** — Shape Up-flavored cadence: what landed, what burned down, what you are betting on next (still just Markdown + YAML/JSON state).
+
+Proposed next (not in this release): card-level appetite (`small`/`medium`/`big`), Definition of Ready checklist beside DoD, Dual Track discovery↔delivery stage pairing.
 
 ## Roadmap
 
 - Embed the editable board inside DSH instead of a local URL
 - Enforced (hard) gate checklists that can block moves, multi-project rollup
 - Fuller i18n for reports and tool messages (board chrome already follows browser locale)
+- Optional card appetite / DoR fields (see Practice notes)
 
 ## Known limitations
 
 - DSH is a developer preview. Compatibility: `engines.dsh >=0.2.0-rc.2 <0.3.0` (preferred by DSH 0.2.1+); peers `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`, `@deepseek-ai/schemastery ~3.18.5` (host-provided, optional). Smoke-tested on 0.2.1-rc.2; previously verified on 0.2.0-rc.2.
-- No Gantt scheduling, automatic bulk archive, hard move-blocking gates or realtime multi-user sync.
+- No Gantt scheduling, automatic bulk archive, hard move-blocking gates/WIP, or realtime multi-user sync.
 - Drag/drop (and Edit → Stage fallback) are checked in a local browser harness; no full keyboard/mobile/WCAG claim.
-- Gate checklists are trackable progress only; moving a card does not require gates to be checked.
+- Gate checklists and WIP limits are trackable soft signals only; moving a card does not require gates to be checked or WIP to be under limit.
 
 ## License
 

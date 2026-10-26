@@ -17,6 +17,7 @@ import {
   createProject,
   renderBoard,
   renderWeekly,
+  wipWarnings,
   LOG_TYPES,
   TEMPLATES,
 } from './lib/delivery.js'
@@ -92,6 +93,7 @@ export function apply(ctx, config) {
               name: { type: 'string', description: 'Stage name', required: true },
               role: { type: 'string', description: 'Owning role' },
               gates: { type: 'array', items: { type: 'string' }, description: 'Governance gate checklist' },
+              wipLimit: { type: 'number', description: 'Optional soft WIP limit (positive integer; warn-only)' },
             },
             additionalProperties: false,
           },
@@ -154,7 +156,9 @@ export function apply(ctx, config) {
         })
         if (!moved) return ok(`No changes: ${args.card_id} is already in ${args.to_stage}.`)
         const last = next.logs[next.logs.length - 1]
-        return ok(last.type === 'handoff' ? `Handed off: ${last.text}` : `Updated (no handoff): ${last.text}`)
+        const warn = wipWarnings(next).filter((w) => w.includes(`(${args.to_stage})`))
+        const base = last.type === 'handoff' ? `Handed off: ${last.text}` : `Updated (no handoff): ${last.text}`
+        return ok(warn.length ? `${base}\nSoft WIP warning: ${warn.join('; ')}` : base)
       },
     }),
   )
@@ -162,7 +166,7 @@ export function apply(ctx, config) {
   register(
     defineTool({
       name: 'delivery_board',
-      description: 'Quick text board: cards per stage + gates + open risks',
+      description: 'Quick text board: cards per stage + gates + soft WIP + open risks',
       parameters: { include_archived: { type: 'boolean', description: 'Include archived cards (default false)' } },
       output: textOutput,
       isConcurrencySafe: () => true,
@@ -241,11 +245,11 @@ export function apply(ctx, config) {
   register(
     defineTool({
       name: 'delivery_weekly',
-      description: 'Draft the client weekly report (Markdown): pipeline progress, handoffs, open risks; optional next-week notes',
+      description: 'Draft the client weekly report (Markdown): pipeline, shipped this week, handoffs, open/resolved risks; optional next bets via next_week',
       parameters: {
         week_label: { type: 'string', description: 'Report title label (optional; does not select the reporting dates)' },
         week_start: { type: 'string', description: 'First reporting date YYYY-MM-DD (inclusive, seven days in local time; defaults to Monday of the current week)' },
-        next_week: { type: 'string', description: 'Optional next-week notes (string or newline-separated list). When omitted or empty, the Next week section is omitted.' },
+        next_week: { type: 'string', description: 'Optional next bets / next-week notes (string or newline-separated list). When omitted or empty, the Next bets section is omitted.' },
       },
       output: textOutput,
       isConcurrencySafe: () => true,
@@ -313,6 +317,7 @@ export function apply(ctx, config) {
       gates: { type: 'array', items: { type: 'string' }, description: 'Gate checklist labels' },
       id: { type: 'string', description: 'Optional stage id (auto-generated from name when omitted)' },
       after: { type: 'string', description: 'Insert after this stage id (append when omitted)' },
+      wip_limit: { type: 'number', description: 'Optional soft WIP limit (positive integer; warn-only, does not block moves)' },
     },
     output: textOutput, isConcurrencySafe: () => false,
     async execute(args, exec) {
@@ -336,6 +341,7 @@ export function apply(ctx, config) {
       name: { type: 'string', description: 'New stage name' },
       role: { type: 'string', description: 'New owning role' },
       gates: { type: 'array', items: { type: 'string' }, description: 'Replace gate checklist labels (check state kept by index)' },
+      wip_limit: { type: 'number', description: 'Soft WIP limit (positive integer). Pass null to clear.' },
     },
     output: textOutput, isConcurrencySafe: () => false,
     async execute(args, exec) {

@@ -36,7 +36,8 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 - **阶段流水线 + 卡片**：每张卡有负责人、截止日期、验收标准和完成定义（DoD）。初始化后仍可增删改阶段（删除时若该阶段仍有卡片，需先 `migrate_to` 迁走）。
 - **交接审计**：卡片跨阶段移动时自动记录交接（谁、从哪到哪、备注）。
-- **周报**：生成 Markdown 客户周报：流水线快照、本周交接、未关闭的风险/阻塞（已 resolve 的不展示）。可选填写下周计划；为空则省略该节。
+- **周报**：生成 Markdown 客户周报：流水线快照、**本周已交付**（进入末级阶段或归档）、交接、未关闭风险，以及**本周已消化风险**。可选 `next_week` 笔记会输出为 **Next bets（下周投注）**；为空则省略。
+- **软 WIP 上限**：阶段可选 `wipLimit`（看板风格）。看板与移动反馈会提示超限，但**从不拦截**移动。
 - **本地可编辑看板**：`/delivery Open the editable board` 在 `127.0.0.1` 上提供鼠标拖拽看板，保存回同一份交付状态；归档/恢复、风险/阻塞记录，以及可勾选的关卡清单均可在看板操作。无障碍回退：编辑卡片里的 Stage。看板界面文案会跟随浏览器语言（中文环境优先 zh-CN）。
 - **离线 HTML 快照**：单个只读文件，没装 DSH 的同事也能打开。
 
@@ -92,8 +93,8 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 | `delivery_log` | 记录进展 / 风险 / 阻塞 / 决策 |
 | `delivery_resolve` | 按 logs 下标将未关闭的风险/阻塞标记为已解决 |
 | `delivery_gate` | 勾选/切换阶段关卡清单项（可跟踪，非硬拦截） |
-| `delivery_stage_add` / `delivery_stage_update` / `delivery_stage_remove` | 初始化后演进流水线（有卡片时删除需 `migrate_to`） |
-| `delivery_weekly` | 客户周报（Markdown） |
+| `delivery_stage_add` / `delivery_stage_update` / `delivery_stage_remove` | 初始化后演进流水线（有卡片时删除需 `migrate_to`；阶段可设软 `wip_limit`） |
+| `delivery_weekly` | 客户周报（Markdown）：已交付 / 交接 / 未关闭与已消化风险 / Next bets |
 
 ## 团队协作与安全
 
@@ -123,23 +124,34 @@ DSH_CLI="/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/d
 
 - 插件契约 `name / inject / Config / apply`；工具经 `defineTool`；捆绑的 `skills/delivery/SKILL.md` 经 `ctx.skills.register` 注册。工具输出渲染为 `ContentBlock[]`。
 - 领域逻辑（`lib/delivery.js`）与 HTML 渲染（`lib/board-html.js`）为纯函数；写入都走 `lib/store.js` 与 `ctx.fs`。
-- 周报交接覆盖从 `week_start` 起连续七个本地日历日（默认本周一）。仅列出未关闭风险/阻塞；`next_week` 有内容时才输出「下周」节。
+- 周报覆盖从 `week_start` 起连续七个本地日历日（默认本周一）。**本周已交付** = 该窗口内进入末级阶段的交接，或归档；未关闭风险单独列出；**本周已消化风险**按窗口内的 `resolvedAt`。`next_week` 有内容时输出 **Next bets** 节。
 - 阶段关卡为可跟踪清单（`gateDone`），**不**拦截移动。
+- 软 **WIP 上限**（`wipLimit` / 工具字段 `wip_limit`）为阶段可选项；超限只在看板与移动反馈中警告，从不拒绝移动。
 - 初始化后可用工具或 `/delivery-admin` 增删改阶段；删除仍有卡片的阶段必须提供 `migrate_to`。
 - HTML 中用户内容均转义（有测试覆盖）。
+
+## 实践说明（轻量）
+
+从适合「仓库内看板」的交付实践里挑了能落地、又不做成重型 PM 套件的两点：
+
+- **看板软 WIP**：给忙碌阶段设 `wip_limit`，超载一眼可见。
+- **周报 shipped / next bets**：带一点 Shape Up 味道——本周落地了什么、消化了什么风险、下周押什么（仍然只是 Markdown + 仓库内状态）。
+
+拟议下一步（本版未做）：卡片级 appetite（`small`/`medium`/`big`）、与 DoD 并列的 Definition of Ready 清单、Dual Track 发现↔交付阶段配对。
 
 ## 路线图
 
 - 把可编辑看板嵌进 DSH，而不是本地 URL
 - 可强制拦截移动的硬关卡、多项目汇总
 - 周报与工具消息的更完整 i18n（看板界面已跟随浏览器语言）
+- 可选卡片 appetite / DoR 字段（见实践说明）
 
 ## 已知限制
 
 - DSH 为开发者预览。兼容声明：`engines.dsh >=0.2.0-rc.2 <0.3.0`（DSH 0.2.1+ 优先读取）；peers `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`、`@deepseek-ai/schemastery ~3.18.5`（由宿主提供，optional）。已在 0.2.1-rc.2 冒烟验证；此前在 0.2.0-rc.2 验证过。
-- 无甘特排期、自动批量归档、硬拦截关卡或实时多用户同步。
+- 无甘特排期、自动批量归档、硬拦截关卡/WIP，或实时多用户同步。
 - 拖拽（以及编辑 → 阶段回退）在本地浏览器 harness 中检查过；不做完整键盘/移动端/WCAG 声明。
-- 关卡清单只是进度跟踪；移动卡片不要求关卡全部勾选。
+- 关卡清单与 WIP 上限只是软信号；移动卡片不要求关卡全部勾选，也不要求 WIP 未超限。
 
 ## 许可证
 

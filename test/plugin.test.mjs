@@ -64,7 +64,7 @@ test('plugin tools complete init, card, handoff, log, board, HTML and weekly flo
   assert.match(files.get('/workspace/delivery-board.html'), /<!DOCTYPE html>/)
   const weekly = await call('delivery_weekly', { week_label: 'Test week', next_week: 'Ship SSO' })
   assert.match(weekly.text, /Analyze → Design/)
-  assert.match(weekly.text, /## Next week\n- Ship SSO/)
+  assert.match(weekly.text, /## Next bets\n- Ship SSO/)
   assert.doesNotMatch(weekly.text, /TODO/)
   const state = JSON.parse(files.get('/workspace/delivery.json'))
   assert.equal(state.cards[0].stage, 'design')
@@ -96,7 +96,7 @@ test('desktop weekly tool honors an explicit reporting period and rejects invali
   const result = await tools.get('delivery_weekly').execute({ week_start: '2026-10-05' }, exec)
   assert.match(result.text, /Selected week item/)
   assert.doesNotMatch(result.text, /Historical item/)
-  assert.doesNotMatch(result.text, /## Next week|TODO/)
+  assert.doesNotMatch(result.text, /## Next bets|TODO/)
   await assert.rejects(tools.get('delivery_weekly').execute({ week_start: '2026-02-30' }, exec), /week_start/)
 })
 

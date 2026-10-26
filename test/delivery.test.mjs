@@ -440,16 +440,16 @@ test('same-stage owner change records a decision, not a handoff, and stays out o
   assert.match(handed.logs.at(-1).text, /Development → Testing/)
 })
 
-test('renderWeekly omits Next week when empty and includes optional next-week notes', () => {
+test('renderWeekly omits Next bets when empty and includes optional next-bet notes', () => {
   const state = createProject({ customer: 'ACME' })
   const bare = renderWeekly(state, 'Week', '2026-10-05')
-  assert.doesNotMatch(bare, /## Next week|TODO/)
+  assert.doesNotMatch(bare, /## Next bets|TODO/)
   assert.match(bare, /## Risks & blockers\n- none/)
   const withNotes = renderWeekly(state, 'Week', '2026-10-05', 'Ship SSO\nClient demo')
-  assert.match(withNotes, /## Next week\n- Ship SSO\n- Client demo/)
+  assert.match(withNotes, /## Next bets\n- Ship SSO\n- Client demo/)
   const asArray = renderWeekly(state, 'Week', '2026-10-05', ['Prep UAT', '  '])
-  assert.match(asArray, /## Next week\n- Prep UAT\n/)
-  assert.doesNotMatch(asArray, /## Next week\n- Prep UAT\n-\n/)
+  assert.match(asArray, /## Next bets\n- Prep UAT\n/)
+  assert.doesNotMatch(asArray, /## Next bets\n- Prep UAT\n-\n/)
 })
 
 test('resolveLog marks risk/blocker resolved; board and weekly only show open items', () => {
@@ -530,4 +530,67 @@ test('pipeline stages can be added, updated and removed safely after init', () =
   assert.equal(emptied.pipeline.some((s) => s.id === 'hardening'), false)
   const only = createProject({ customer: 'X', stages: [{ name: 'Solo' }] })
   assert.throws(() => removeStage(only, { stageId: only.pipeline[0].id }), /last stage/)
+})
+
+test('soft WIP limits warn on board and weekly without blocking moves', () => {
+  let state = createProject({ customer: 'ACME', template: 'governance' })
+  state = updateStage(state, { stageId: 'build', wipLimit: 1 })
+  assert.equal(state.pipeline.find((s) => s.id === 'build').wipLimit, 1)
+  state = addCard(state, { title: 'One', stage: 'build' })
+  state = addCard(state, { title: 'Two', stage: 'build' })
+  const board = renderBoard(state)
+  assert.match(board, /WIP 2\/1 ⚠ over/)
+  assert.match(board, /Soft WIP warnings · 1/)
+  assert.match(board, /Build \(build\): 2\/1 WIP/)
+  // Soft: move into an over-limit stage still works.
+  state = addCard(state, { title: 'Incoming', stage: 'design' })
+  const moved = moveCard(state, { cardId: 'c3', toStage: 'build' })
+  assert.equal(moved.cards.find((c) => c.id === 'c3').stage, 'build')
+  assert.match(renderBoard(moved), /WIP 3\/1 ⚠ over/)
+  assert.match(renderWeekly(moved, '', '2026-10-05'), /Build: 3 card\(s\) \(WIP 3\/1 over\)/)
+  const cleared = updateStage(moved, { stageId: 'build', wipLimit: null })
+  assert.equal(cleared.pipeline.find((s) => s.id === 'build').wipLimit, undefined)
+  assert.doesNotMatch(renderBoard(cleared), /WIP |Soft WIP/)
+  assert.throws(() => updateStage(state, { stageId: 'build', wipLimit: 0 }), /wipLimit must be a positive integer/)
+})
+
+test('weekly report lists shipped, risk burn-down and next bets', () => {
+  let state = createProject({ customer: 'ACME', template: 'governance' })
+  state = addCard(state, { title: 'Go live feature', stage: 'deploy' })
+  state = addCard(state, { title: 'Parked item', stage: 'build' })
+  state = moveCard(state, { cardId: 'c1', toStage: 'live', note: 'released' })
+  // Force handoff into the reporting window
+  state = {
+    ...state,
+    logs: state.logs.map((l) => (
+      l.type === 'handoff' ? { ...l, ts: new Date('2026-10-07T10:00:00').toISOString() } : l
+    )),
+  }
+  state = appendLog(state, { type: 'risk', text: 'Vendor delay', cardId: 'c1' })
+  state = resolveLog(state, { index: state.logs.length - 1 })
+  state = {
+    ...state,
+    logs: state.logs.map((l, i) => (
+      i === state.logs.length - 1 ? { ...l, resolvedAt: new Date('2026-10-08T12:00:00').toISOString() } : l
+    )),
+  }
+  state = archiveCard(state, { cardId: 'c2' })
+  state = {
+    ...state,
+    cards: state.cards.map((c) => (
+      c.id === 'c2' ? { ...c, archivedAt: new Date('2026-10-09T09:00:00').toISOString() } : c
+    )),
+    logs: state.logs.map((l) => (
+      l.text.includes('archived') ? { ...l, ts: new Date('2026-10-09T09:00:00').toISOString() } : l
+    )),
+  }
+  const report = renderWeekly(state, 'Week', '2026-10-05', 'Bet on SSO\nBet on billing')
+  assert.match(report, /## Shipped this week\n- \[c1\] Go live feature → Live\n- \[c2\] Parked item \(archived\)/)
+  assert.match(report, /## Risks resolved this week\n- \[risk\] Vendor delay/)
+  assert.match(report, /## Next bets\n- Bet on SSO\n- Bet on billing/)
+  assert.doesNotMatch(report, /## Next week/)
+  const empty = renderWeekly(createProject({ customer: 'X' }), '', '2026-10-05')
+  assert.match(empty, /## Shipped this week\n- none/)
+  assert.match(empty, /## Risks resolved this week\n- none/)
+  assert.doesNotMatch(empty, /## Next bets/)
 })

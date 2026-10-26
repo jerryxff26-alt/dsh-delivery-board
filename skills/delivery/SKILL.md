@@ -41,14 +41,15 @@ Use the current board's IDs and stage IDs, not guessed IDs or display names. Res
 | Inspect delivery | `delivery_board`: active cards by default; include archives only when needed |
 | Open the editable board | `delivery_open`: return its machine-local URL; this is not a published team URL |
 | Share an offline view | `delivery_board_html`: a read-only HTML snapshot, not a writable board |
-| Prepare the weekly report | `delivery_weekly`: select the requested reporting period with `week_start`; `week_label` only changes the heading |
+| Prepare the weekly report | `delivery_weekly`: select the reporting period with `week_start`; report includes shipped / handoffs / open risks / risks resolved; `next_week` becomes **Next bets**; `week_label` only changes the heading |
+| Soft WIP on a stage | `delivery_stage_update` / `delivery_stage_add` with `wip_limit` (positive integer). Soft warning only — moves are never blocked |
 
 For an explicit card change, perform the requested tool operation and verify the result; do not require a new overall plan. Before a handoff, distinguish available evidence from unmet criteria or missing sign-off. Gates are human-confirmed/display-only: do not claim a tool enforced them or tests passed unless actual evidence supports that claim. A same-stage owner change is an update, not a new cross-stage handoff.
 
 ## Report facts, then next actions
 
 - Show the saved state separately from suggestions that have not been applied.
-- Use the requested seven-day period for a weekly report and actual handoffs from that period. Pipeline counts are a current snapshot; risk/blocker logs are cumulative and do not prove an issue is still open or resolved.
+- Use the requested seven-day period for a weekly report. Shipped = handoffs into the terminal stage or archives in that window; handoffs are listed separately; open risks are cumulative; "Risks resolved this week" uses `resolvedAt` in the window. Soft WIP overages are warnings, not blocks.
 - If enriching a report from source or tests, label that evidence separately from the generated delivery report. Do not fabricate progress percentages or hide missing verification.
 - Keep client-facing summaries about outcomes, ownership and blockers; keep internal file/code detail in technical context.
 - A write failure or stale-state conflict is not success. Refresh the board, explain the conflict, and retry only the still-needed operation. Never replace existing delivery state to recover from a failed request.
