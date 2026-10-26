@@ -21,9 +21,9 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 ## 演示
 
-![虚构演示：痛点 → 阶段看板 → 交接审计 → 周报/HTML → 安装](docs/demo/demo.gif)
+![虚构演示：阶段看板 → 拖拽交接 → 日历时间线 → 深色模式 → 安装](docs/demo/demo.gif)
 
-*约 19 秒无声演示（英文叠字 · 虚构数据）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
+*约 25 秒无声演示（v0.1.6 界面 · 英文叠字 · 虚构数据）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
 
 ## 设计原则
 

@@ -21,9 +21,9 @@ Tested with DSH **0.2.1-rc.2** (developer preview; also compatible with **0.2.0-
 
 ## Demo
 
-![Synthetic demo: pain → stage board → handoff audit → weekly HTML → install](docs/demo/demo.gif)
+![Synthetic demo: stage board → drag handoff → calendar Timeline → dark mode → install](docs/demo/demo.gif)
 
-*~19s silent walkthrough of board/report views (English overlays · synthetic data), not a model-led planning recording. [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
+*~25s silent walkthrough of the live board (v0.1.6 UI · English overlays · synthetic data), not a model-led planning recording. [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
 
 ## Design principles
 
