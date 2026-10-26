@@ -43,7 +43,7 @@
   },
   "scripts": {
     "check": "node --check index.js && node --check lib/delivery.js && node --check lib/store.js && node --check lib/board-html.js && node --check lib/board-view.js && node --check lib/board-client.js && node --check lib/board-server.js && node --check lib/commands.js && node --check lib/actions.js && node --check lib/skill.js",
-    "test": "node --test test/delivery.test.mjs test/board-html.test.mjs test/store.test.mjs test/commands.test.mjs test/board-server.test.mjs test/plugin.test.mjs test/skill.test.mjs",
+    "test": "node --test test/delivery.test.mjs test/board-html.test.mjs test/board-timeline.test.mjs test/store.test.mjs test/commands.test.mjs test/board-server.test.mjs test/plugin.test.mjs test/skill.test.mjs",
     "test:desktop": "node test/desktop-runner.mjs"
   },
   "peerDependencies": {

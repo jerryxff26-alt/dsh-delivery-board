@@ -39,12 +39,17 @@ Tested with DSH **0.2.1-rc.2** (developer preview; also compatible with **0.2.0-
 - **Weekly report** — a Markdown client report: pipeline snapshot, **shipped this week** (arrived at the terminal stage or archived), handoffs, open risks, and **risks resolved this week**. Optional `next_week` notes appear as **Next bets** (omitted when empty).
 - **Soft WIP limits** — optional per-stage `wipLimit` (Kanban-style). The board and move responses warn when a stage is over; moves are never blocked.
 - **Local editable board** — ask `/delivery Open the editable board`; the tool serves a mouse drag-and-drop board on `127.0.0.1` that saves back to the same delivery state. Archive/restore, risk/blocker logging, and trackable gate checklists are available on the board. Accessibility fallback: Edit → Stage. Board chrome follows the browser locale (zh-CN when appropriate).
+- **Timeline view** — a calendar-axis Gantt of every card: bars follow real dates (created → each stage handoff → shipped / archived / today), with a today line, week and month gridlines, ◆ due markers (red when overdue), and a tray for cards with no dates yet. Same search and owner filters as the kanban; click a title to edit. Light and dark themes follow the OS.
 - **Offline HTML snapshot** — a single read-only file teammates without DSH can open.
 
 ![Full-width editable delivery board showing all governance stages Plan→Live with synthetic ACME cards](docs/screenshots/board.jpg)
 
+![Timeline view: calendar-axis bars per card colored by stage, with today line, week/month gridlines, due and shipped markers](docs/screenshots/timeline.jpg)
+
 <details>
-<summary>Card editor and archive views</summary>
+<summary>Card editor, archive and dark-mode views</summary>
+
+![Timeline view in dark mode with Chinese chrome](docs/screenshots/timeline-dark-zh.jpg)
 
 ![Card editor showing title, owner, due date, stage, acceptance criteria and Definition of Done](docs/screenshots/card-editor.jpg)
 

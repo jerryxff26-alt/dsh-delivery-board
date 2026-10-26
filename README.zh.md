@@ -39,12 +39,17 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 - **周报**：生成 Markdown 客户周报：流水线快照、**本周已交付**（进入末级阶段或归档）、交接、未关闭风险，以及**本周已消化风险**。可选 `next_week` 笔记会输出为 **Next bets（下周投注）**；为空则省略。
 - **软 WIP 上限**：阶段可选 `wipLimit`（看板风格）。看板与移动反馈会提示超限，但**从不拦截**移动。
 - **本地可编辑看板**：`/delivery Open the editable board` 在 `127.0.0.1` 上提供鼠标拖拽看板，保存回同一份交付状态；归档/恢复、风险/阻塞记录，以及可勾选的关卡清单均可在看板操作。无障碍回退：编辑卡片里的 Stage。看板界面文案会跟随浏览器语言（中文环境优先 zh-CN）。
+- **时间线视图**：按真实日历日期展示每张卡片的甘特条（创建 → 各阶段交接 → 上线 / 归档 / 今天），带“今天”标线、周/月网格线、◆ 截止标记（逾期为红色），没有日期的卡片单独列出。与看板共用搜索和负责人筛选，点击标题即可编辑；浅色/深色主题跟随系统。
 - **离线 HTML 快照**：单个只读文件，没装 DSH 的同事也能打开。
 
 ![宽屏完整治理流水线看板（Plan→Live，虚构 ACME 卡片）](docs/screenshots/board.jpg)
 
+![时间线视图：按日历轴展示各卡片阶段色条，含今天标线、周/月网格线、截止与上线标记](docs/screenshots/timeline.jpg)
+
 <details>
-<summary>卡片编辑与归档视图</summary>
+<summary>卡片编辑、归档与深色模式</summary>
+
+![深色模式下的中文时间线视图](docs/screenshots/timeline-dark-zh.jpg)
 
 ![卡片编辑：标题、负责人、截止日期、阶段、验收标准与完成定义](docs/screenshots/card-editor.jpg)
 
