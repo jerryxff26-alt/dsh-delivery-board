@@ -1,7 +1,7 @@
 {
   "name": "dsh-delivery-board",
-  "version": "0.1.6",
-  "description": "Delivery handoff board plugin for DeepSeek Harness (dsh): stage pipeline, handoff audit trail, weekly Markdown report, local editable board.",
+  "version": "0.2.0",
+  "description": "Codebase-native delivery board: stage pipeline, handoff audit, weekly report, and local Timeline UI. Works as a DeepSeek Harness (dsh) plugin or standalone via npx.",
   "keywords": [
     "dsh-plugin",
     "deepseek-harness",
@@ -9,7 +9,12 @@
     "delivery",
     "kanban",
     "project-management",
-    "tob"
+    "tob",
+    "cli",
+    "npx",
+    "standalone",
+    "weekly-report",
+    "timeline"
   ],
   "license": "MIT",
   "author": "jerryxff26-alt",
@@ -24,6 +29,7 @@
   "type": "module",
   "main": "index.js",
   "files": [
+    "bin/",
     "index.js",
     "lib/",
     "skills/",
@@ -42,8 +48,8 @@
     }
   },
   "scripts": {
-    "check": "node --check index.js && node --check lib/delivery.js && node --check lib/store.js && node --check lib/board-html.js && node --check lib/board-view.js && node --check lib/board-client.js && node --check lib/board-server.js && node --check lib/commands.js && node --check lib/actions.js && node --check lib/skill.js",
-    "test": "node --test test/delivery.test.mjs test/board-html.test.mjs test/board-timeline.test.mjs test/store.test.mjs test/commands.test.mjs test/board-server.test.mjs test/plugin.test.mjs test/skill.test.mjs",
+    "check": "node --check index.js && node --check lib/delivery.js && node --check lib/store.js && node --check lib/board-html.js && node --check lib/board-view.js && node --check lib/board-client.js && node --check lib/board-server.js && node --check lib/commands.js && node --check lib/actions.js && node --check lib/skill.js && node --check lib/node-fs.js && node --check lib/standalone.js && node --check bin/dsh-delivery-board.js",
+    "test": "node --test test/delivery.test.mjs test/board-html.test.mjs test/board-timeline.test.mjs test/store.test.mjs test/commands.test.mjs test/board-server.test.mjs test/plugin.test.mjs test/skill.test.mjs test/node-fs.test.mjs test/standalone.test.mjs",
     "test:desktop": "node test/desktop-runner.mjs"
   },
   "peerDependencies": {
@@ -61,5 +67,8 @@
     "@deepseek-ai/schemastery": {
       "optional": true
     }
+  },
+  "bin": {
+    "dsh-delivery-board": "./bin/dsh-delivery-board.js"
   }
 }

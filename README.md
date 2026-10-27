@@ -2,34 +2,56 @@
 
 [English](README.md) · [中文](README.zh.md)
 
-> **Codebase-native delivery context.**  
-> Delivery state lives with the source: humans and models share one context.
+> **In-repo delivery board for humans and agents** — stages, handoffs, WIP, weekly report, and a local Timeline UI, all backed by one file in your git repo.
 
-From Plan through requirements, design, build, test, and go-live, if delivery state is not alongside the code, people and agents struggle to stay aligned: who owns what, what “done” means, and where work is stuck often live only in handoffs and verbal sync.
+![Synthetic demo: stage board → drag handoff → calendar Timeline → dark mode → install](docs/demo/demo.gif)
 
-**dsh-delivery-board** is a skill-backed [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) plugin that writes the stage pipeline, handoff trail, and client weekly report into in-repo delivery state. The board, audit, and weekly report are projections of that same state — not a separate service.
+*~25s silent walkthrough of the live board (v0.2.0 UI · English overlays · synthetic data). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
 
-The goal is clear: run the full delivery lifecycle from the codebase, so PMs, engineers, QA, and AI agents share one Source of Truth.
+## 30-second quickstart
+
+**Standalone (no DeepSeek Harness required):**
+
+```bash
+npx dsh-delivery-board init '{"customer":"ACME","template":"governance"}'
+npx dsh-delivery-board card '{"title":"API integration","stage":"analyze","owner":"Ada"}'
+npx dsh-delivery-board open    # loopback board + Timeline; Ctrl+C to stop
+npx dsh-delivery-board weekly
+```
+
+**As a [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) plugin** (skill-backed `/delivery` workflow):
 
 ```bash
 dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 ```
 
-Desktop app: install the same GitHub spec, `github:jerryxff26-alt/dsh-delivery-board`, from the plugin manager. (The CLI command above is the verified path; the desktop plugin-manager flow has not been separately verified.)
+Desktop app: install the same GitHub spec from the plugin manager. (CLI install above is the verified path; desktop plugin-manager flow has not been separately verified.) Tested with DSH **0.2.1-rc.2** (also compatible with **0.2.0-rc.2**). No runtime dependencies.
 
-Tested with DSH **0.2.1-rc.2** (developer preview; also compatible with **0.2.0-rc.2**). No runtime dependencies. Declares `engines.dsh` for DSH 0.2.1+ compatibility checks.
+## Why it exists
 
-## Demo
+From Plan through requirements, design, build, test, and go-live, if delivery state is not alongside the code, people and agents struggle to stay aligned: who owns what, what “done” means, and where work is stuck often live only in handoffs and verbal sync.
 
-![Synthetic demo: stage board → drag handoff → calendar Timeline → dark mode → install](docs/demo/demo.gif)
+**dsh-delivery-board** writes the stage pipeline, handoff trail, and client weekly report into in-repo delivery state (`delivery.json` by default). The kanban board, calendar Timeline, audit log, and weekly Markdown report are projections of that same state — not a separate SaaS. PMs, engineers, QA, and AI agents share one Source of Truth that travels with the repo.
 
-*~25s silent walkthrough of the live board (v0.1.6 UI · English overlays · synthetic data), not a model-led planning recording. [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
+## Compared to alternatives
+
+| Need | This project | Typical SaaS kanban | Markdown checklists alone |
+| --- | --- | --- | --- |
+| Lives in the git repo | Yes (`delivery.json`) | Usually a remote workspace | Yes, but no structured handoffs / WIP |
+| Handoff audit + weekly client report | Built-in | Needs custom fields / exports | Manual |
+| Local editable UI + Timeline | Loopback board | Full web app | No |
+| Works with AI coding agents | DSH skill + tools; CLI for any agent/shell | Often via API / MCP | Prompt-only |
+| Scope | Delivery context for one repo | Org-wide PM suite | Lightweight notes |
+
+It is intentionally **not** a rebuild of Jira, Linear, or Notion — those are excellent for org-scale planning. This keeps only the delivery context the current repository actually needs, offline-friendly and reviewable in PRs.
+
+If this saves your team a standup or a messy weekly paste, a [⭐ star](https://github.com/jerryxff26-alt/dsh-delivery-board) helps others find it — thank you.
 
 ## Design principles
 
 - **Delivery state is a first-class citizen** — stages, owners, acceptance criteria (AC), Definition of Done (DoD), handoffs, and blockers live in the repo and evolve with Git.
 - **Views are projections** — the local board, handoff audit, client weekly report, and offline HTML are all projections of the same delivery state.
-- **Operate through DSH** — advance stages, fill in AC, log blockers, and generate weekly reports with `/delivery` or plain language; you do not treat JSON as the day-to-day editing UI.
+- **Operate via CLI or DSH** — advance stages, fill in AC, log blockers, and generate weekly reports with `npx dsh-delivery-board …`, `/delivery`, or plain language; you do not treat JSON as the day-to-day editing UI.
 - **Clear boundaries** — this is not a rebuild of an enterprise project-management platform; it keeps in the codebase only the delivery context the current repo actually needs.
 
 ## What you get
@@ -58,6 +80,21 @@ Tested with DSH **0.2.1-rc.2** (developer preview; also compatible with **0.2.0-
 </details>
 
 *Screenshots captured at a normal laptop viewport (~1440×900) from a synthetic ACME board: denser columns so Plan→Live fit without horizontal scroll when possible.*
+
+## Standalone CLI
+
+Same domain as the plugin (stages, handoffs, soft WIP, weekly report, local board + Timeline). State file defaults to `delivery.json` in the current directory (`--cwd` / `--file` to override).
+
+```bash
+npx dsh-delivery-board help
+npx dsh-delivery-board init '{"customer":"Demo","template":"governance"}'
+npx dsh-delivery-board board
+npx dsh-delivery-board open
+npx dsh-delivery-board weekly 2026-10-20
+npx dsh-delivery-board html
+```
+
+Command shape matches `/delivery-admin` in the DSH plugin. `open` keeps the process alive until Ctrl+C.
 
 ## Usage
 
@@ -164,7 +201,7 @@ Fully quit and reopen DSH after installing or changing a linked plugin, then che
 Implementation notes:
 
 - Plugin contract `name / inject / Config / apply`; tools via `defineTool`; the bundled `skills/delivery/SKILL.md` is registered through `ctx.skills.register`. Tool output renderers return `ContentBlock[]`.
-- Domain logic (`lib/delivery.js`) and the HTML renderer (`lib/board-html.js`) are pure functions; all writes go through `lib/store.js` and `ctx.fs`.
+- Domain logic (`lib/delivery.js`) and the HTML renderer (`lib/board-html.js`) are pure functions; all writes go through `lib/store.js`. The DSH plugin uses `ctx.fs`; the standalone CLI uses `lib/node-fs.js` + `lib/standalone.js` with the same store contract.
 - Weekly reports cover seven local-calendar days starting at `week_start` (default: Monday of the current week). **Shipped** = handoffs into the terminal pipeline stage or archives in that window; open risks are listed; **Risks resolved this week** uses `resolvedAt` in the window. Pass `next_week` notes to include a **Next bets** section (omitted when empty).
 - Stage gates are **trackable checklists** persisted on each stage (`gateDone`); they do **not** block card moves.
 - Soft **WIP limits** (`wipLimit` / tool field `wip_limit`) are optional per stage; over-limit stages warn on the board and after moves, but never refuse a move.
@@ -182,14 +219,14 @@ Proposed next (not in this release): card-level appetite (`small`/`medium`/`big`
 
 ## Roadmap
 
-- Embed the editable board inside DSH instead of a local URL
+- Embed the editable board inside DSH instead of a local URL (standalone CLI shipped in v0.2.0)
 - Enforced (hard) gate checklists that can block moves, multi-project rollup
 - Fuller i18n for reports and tool messages (board chrome already follows browser locale)
 - Optional card appetite / DoR fields (see Practice notes)
 
 ## Known limitations
 
-- DSH is a developer preview. Compatibility: `engines.dsh >=0.2.0-rc.2 <0.3.0` (preferred by DSH 0.2.1+); peers `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`, `@deepseek-ai/schemastery ~3.18.5` (host-provided, optional). Smoke-tested on 0.2.1-rc.2; previously verified on 0.2.0-rc.2.
+- **Standalone CLI** needs only Node ≥20 (`npx dsh-delivery-board`). The DSH plugin path is a developer preview: `engines.dsh >=0.2.0-rc.2 <0.3.0`; peers `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`, `@deepseek-ai/schemastery ~3.18.5` (host-provided, optional). Smoke-tested on DSH 0.2.1-rc.2; previously verified on 0.2.0-rc.2.
 - No Gantt scheduling, automatic bulk archive, hard move-blocking gates/WIP, or realtime multi-user sync.
 - Drag/drop (and Edit → Stage fallback) are checked in a local browser harness; no full keyboard/mobile/WCAG claim.
 - Gate checklists and WIP limits are trackable soft signals only; moving a card does not require gates to be checked or WIP to be under limit.

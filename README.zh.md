@@ -2,34 +2,56 @@
 
 [English](README.md) · [中文](README.zh.md)
 
-> **Codebase-native delivery context.**  
-> 交付状态与源码同仓同源：人与模型共享同一份上下文。
+> **给人与 Agent 共用的仓内交付看板** — 阶段流水线、交接留痕、软 WIP、客户周报，以及本地 Timeline 界面；全部落在仓库里的一份交付状态上。
 
-从 Plan 到需求、设计、开发、测试再到上线，交付状态如果和代码不在一起，人和 Agent 就很难对齐：谁负责、怎样算完成、哪里卡住，往往散落在交接和口头同步里。
+![虚构演示：阶段看板 → 拖拽交接 → 日历时间线 → 深色模式 → 安装](docs/demo/demo.gif)
 
-**dsh-delivery-board** 是 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`）插件：把阶段流水线、交接留痕和客户周报写入仓库内的交付状态。看板、审计与周报只是同一份状态的不同视图，不是另一套独立服务。
+*约 25 秒无声演示（v0.2.0 界面 · 英文叠字 · 虚构数据）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
 
-目标很明确：基于 codebase 完成整条交付生命周期，让 PM、研发、测试和 AI agent 共用同一个 Source of Truth。
+## 30 秒快速开始
+
+**独立 CLI（无需 DeepSeek Harness）：**
+
+```bash
+npx dsh-delivery-board init '{"customer":"ACME","template":"governance"}'
+npx dsh-delivery-board card '{"title":"API integration","stage":"analyze","owner":"Ada"}'
+npx dsh-delivery-board open    # 本机看板 + Timeline；Ctrl+C 结束
+npx dsh-delivery-board weekly
+```
+
+**作为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`）插件**（`/delivery` skill 工作流）：
 
 ```bash
 dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 ```
 
-桌面版：在插件管理中安装同一个 GitHub 来源 `github:jerryxff26-alt/dsh-delivery-board`。（上面的 CLI 命令已验证；桌面插件管理流程未单独验证。）
+桌面版：在插件管理中安装同一个 GitHub 来源。（上面的 CLI 安装路径已验证；桌面插件管理流程未单独验证。）已在 DSH **0.2.1-rc.2** 测试（亦兼容 **0.2.0-rc.2**），无运行时依赖。
 
-已在 DSH **0.2.1-rc.2**（开发者预览版；亦兼容 **0.2.0-rc.2**）上测试，无运行时依赖。通过 `engines.dsh` 声明供 DSH 0.2.1+ 做兼容性检查。
+## 为什么存在
 
-## 演示
+从 Plan 到需求、设计、开发、测试再到上线，交付状态如果和代码不在一起，人和 Agent 就很难对齐：谁负责、怎样算完成、哪里卡住，往往散落在交接和口头同步里。
 
-![虚构演示：阶段看板 → 拖拽交接 → 日历时间线 → 深色模式 → 安装](docs/demo/demo.gif)
+**dsh-delivery-board** 把阶段流水线、交接留痕和客户周报写入仓库内的交付状态（默认 `delivery.json`）。看板、日历 Timeline、审计与周报只是同一份状态的不同视图，不是另一套 SaaS。PM、研发、测试和 AI agent 共用同一个、能跟着仓库走的 Source of Truth。
 
-*约 25 秒无声演示（v0.1.6 界面 · 英文叠字 · 虚构数据）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
+## 和其他方案比
+
+| 需求 | 本项目 | 常见 SaaS 看板 | 仅 Markdown 清单 |
+| --- | --- | --- | --- |
+| 落在 git 仓库里 | 是（`delivery.json`） | 多为远程工作区 | 是，但缺少结构化交接 / WIP |
+| 交接审计 + 客户周报 | 内置 | 需自定义字段 / 导出 | 手工 |
+| 本地可编辑 UI + Timeline | 本机环回看板 | 完整 Web 应用 | 无 |
+| 配合 AI coding agent | DSH skill + 工具；任意 shell 可用 CLI | 多经 API / MCP | 仅靠提示词 |
+| 范围 | 单仓库交付上下文 | 组织级 PM 套件 | 轻量笔记 |
+
+刻意**不是**重造 Jira、Linear 或 Notion——那些适合组织级规划。这里只保留当前仓库真正需要的交付上下文，可离线、可在 PR 里审阅。
+
+如果它帮你少开一次对齐会、少贴一次凌乱周报，点一颗 [⭐ star](https://github.com/jerryxff26-alt/dsh-delivery-board) 能让更多人发现它——谢谢。
 
 ## 设计原则
 
 - **Delivery state 是一等公民**：阶段、负责人、验收标准（AC）、完成定义（DoD）、交接与阻塞，都留在仓库里，跟随 Git 演进。
 - **视图解耦**：本地看板、交接审计、客户周报、离线 HTML，都是同一份交付状态的 Projection。
-- **通过 DSH 操作**：用 `/delivery` 或自然语言推进阶段、补 AC、记阻塞、出周报；不必把 JSON 当成日常手工编辑界面。
+- **用 CLI 或 DSH 操作**：用 `npx dsh-delivery-board …`、`/delivery` 或自然语言推进阶段、补 AC、记阻塞、出周报；不必把 JSON 当成日常手工编辑界面。
 - **边界清晰**：不重造企业级项目管理平台，只把当前仓库交付真正需要的上下文留在 codebase 里。
 
 ## 你能得到什么
@@ -57,7 +79,22 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 </details>
 
-## 快速开始
+## 独立 CLI
+
+与插件共用同一套领域能力（阶段、交接、软 WIP、周报、本地看板 + Timeline）。默认在当前目录读写 `delivery.json`（可用 `--cwd` / `--file` 覆盖）。
+
+```bash
+npx dsh-delivery-board help
+npx dsh-delivery-board init '{"customer":"Demo","template":"governance"}'
+npx dsh-delivery-board board
+npx dsh-delivery-board open
+npx dsh-delivery-board weekly 2026-10-20
+npx dsh-delivery-board html
+```
+
+命令形态与 DSH 插件里的 `/delivery-admin` 一致。`open` 会保持进程直到 Ctrl+C。
+
+## DSH 插件快速开始
 
 ```bash
 dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
@@ -128,7 +165,7 @@ DSH_CLI="/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/d
 ### 实现说明
 
 - 插件契约 `name / inject / Config / apply`；工具经 `defineTool`；捆绑的 `skills/delivery/SKILL.md` 经 `ctx.skills.register` 注册。工具输出渲染为 `ContentBlock[]`。
-- 领域逻辑（`lib/delivery.js`）与 HTML 渲染（`lib/board-html.js`）为纯函数；写入都走 `lib/store.js` 与 `ctx.fs`。
+- 领域逻辑（`lib/delivery.js`）与 HTML 渲染（`lib/board-html.js`）为纯函数；写入都走 `lib/store.js`。DSH 插件使用 `ctx.fs`；独立 CLI 通过 `lib/node-fs.js` + `lib/standalone.js` 使用同一套 store 契约。
 - 周报覆盖从 `week_start` 起连续七个本地日历日（默认本周一）。**本周已交付** = 该窗口内进入末级阶段的交接，或归档；未关闭风险单独列出；**本周已消化风险**按窗口内的 `resolvedAt`。`next_week` 有内容时输出 **Next bets** 节。
 - 阶段关卡为可跟踪清单（`gateDone`），**不**拦截移动。
 - 软 **WIP 上限**（`wipLimit` / 工具字段 `wip_limit`）为阶段可选项；超限只在看板与移动反馈中警告，从不拒绝移动。
@@ -146,14 +183,14 @@ DSH_CLI="/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/d
 
 ## 路线图
 
-- 把可编辑看板嵌进 DSH，而不是本地 URL
+- 把可编辑看板嵌进 DSH，而不是本地 URL（独立 CLI 已在 v0.2.0 发布）
 - 可强制拦截移动的硬关卡、多项目汇总
 - 周报与工具消息的更完整 i18n（看板界面已跟随浏览器语言）
 - 可选卡片 appetite / DoR 字段（见实践说明）
 
 ## 已知限制
 
-- DSH 为开发者预览。兼容声明：`engines.dsh >=0.2.0-rc.2 <0.3.0`（DSH 0.2.1+ 优先读取）；peers `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`、`@deepseek-ai/schemastery ~3.18.5`（由宿主提供，optional）。已在 0.2.1-rc.2 冒烟验证；此前在 0.2.0-rc.2 验证过。
+- **独立 CLI** 只需 Node ≥20（`npx dsh-delivery-board`）。DSH 插件路径为开发者预览：`engines.dsh >=0.2.0-rc.2 <0.3.0`；peers `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`、`@deepseek-ai/schemastery ~3.18.5`（由宿主提供，optional）。已在 DSH 0.2.1-rc.2 冒烟验证；此前在 0.2.0-rc.2 验证过。
 - 无甘特排期、自动批量归档、硬拦截关卡/WIP，或实时多用户同步。
 - 拖拽（以及编辑 → 阶段回退）在本地浏览器 harness 中检查过；不做完整键盘/移动端/WCAG 声明。
 - 关卡清单与 WIP 上限只是软信号；移动卡片不要求关卡全部勾选，也不要求 WIP 未超限。
