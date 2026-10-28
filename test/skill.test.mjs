@@ -34,6 +34,17 @@ test('skill distinguishes repository-grounded proposals from authorized persiste
   assert.match(content, /Do not substitute shell commands or direct JSON edits/)
 })
 
+test('skill surfaces First 60s and Daily loop before advanced tools', () => {
+  const { content } = loadDeliverySkill()
+  assert.match(content, /## First 60s in DSH/)
+  assert.match(content, /## Daily loop \(only these\)/)
+  assert.match(content, /prefer template `lite`|prefer the `lite` template/)
+  assert.ok(content.indexOf('Daily loop') < content.indexOf('Advanced (keep available'))
+  for (const name of ['delivery_init', 'delivery_card', 'delivery_move', 'delivery_board', 'delivery_open', 'delivery_update', 'delivery_weekly', 'delivery_log']) {
+    assert.ok(content.includes(name), name)
+  }
+})
+
 test('only the advanced command namespace bypasses the model', async () => {
   const registered = []
   let calls = 0

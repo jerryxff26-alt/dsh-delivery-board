@@ -6,7 +6,7 @@
 
 ![虚构演示：阶段看板 → 拖拽交接 → 日历时间线 → 深色模式 → 安装](docs/demo/demo.gif)
 
-*约 25 秒无声演示（v0.2.1 界面 · 英文叠字 · 虚构数据）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
+*约 25 秒无声演示（v0.2.2 界面 · 英文叠字 · 虚构数据）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
 
 ## 30 秒快速开始
 
@@ -100,6 +100,15 @@ npx dsh-delivery-board html
 dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 ```
 
+### 日常只做这些（主路径）
+
+1. **初始化** — `lite` 模板（或 `/delivery Initialize a lite board for ACME`）
+2. **建卡** — 可观察结果 + 阶段
+3. **交接** — `move` / 拖拽看板
+4. **周报 / 开看板** — `weekly` / `open`
+
+`/delivery` = 模型 skill（日常主入口）。`/delivery-admin` = 不经模型的确定性逃生舱。日常优先 `/delivery`。
+
 然后在会话里：
 
 ```text
@@ -107,7 +116,7 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 /delivery Open the editable board
 ```
 
-高级、确定性命令（不经过模型）：`/delivery-admin help`。
+高级、确定性命令：`/delivery-admin help`。
 
 ## Skill 与工具
 
@@ -123,21 +132,28 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 ## 工具
 
+**日常环**（优先用这些）：
+
 | 工具 | 作用 |
 |---|---|
-| `delivery_init` | 初始化项目（客户 + 模板或自定义阶段） |
+| `delivery_init` | 初始化（优先 `lite`；或 `default` / `governance` / 自定义阶段） |
 | `delivery_card` | 新增卡片 |
-| `delivery_move` | 跨阶段移动卡片并记录交接；同阶段只改负责人时记为决策，不算交接 |
+| `delivery_move` | 跨阶段移动并记录交接；同阶段只改负责人时记为决策 |
 | `delivery_board` | 文本看板 |
 | `delivery_open` | 本地可编辑看板 URL |
 | `delivery_update` | 修改卡片信息（不移动） |
+| `delivery_log` | 记录进展 / 风险 / 阻塞 / 决策 |
+| `delivery_weekly` | 客户周报（Markdown）：已交付 / 交接 / 风险 / Next bets |
+
+**高级**（仍注册；仅在明确需要时用）：
+
+| 工具 | 作用 |
+|---|---|
 | `delivery_archive` / `delivery_restore` | 归档 / 恢复到原阶段 |
 | `delivery_board_html` | 只读离线 HTML 快照 |
-| `delivery_log` | 记录进展 / 风险 / 阻塞 / 决策 |
 | `delivery_resolve` | 按 logs 下标将未关闭的风险/阻塞标记为已解决 |
 | `delivery_gate` | 勾选/切换阶段关卡清单项（可跟踪，非硬拦截） |
 | `delivery_stage_add` / `delivery_stage_update` / `delivery_stage_remove` | 初始化后演进流水线（有卡片时删除需 `migrate_to`；阶段可设软 `wip_limit`） |
-| `delivery_weekly` | 客户周报（Markdown）：已交付 / 交接 / 未关闭与已消化风险 / Next bets |
 
 ## 团队协作与安全
 

@@ -9,10 +9,11 @@ function fixture() {
   const writes = []
   const commands = new Map()
   const skills = new Map()
+  const prompts = []
   const signal = new AbortController().signal
   const exec = { agent: { session: { header: { cwd: '/workspace' } } }, signal }
   const ctx = {
-    systemPrompt: { section() {} },
+    systemPrompt: { section(s) { prompts.push(s) } },
     skills: { register(skill) { skills.set(skill.name, skill) } },
     commands: { register(command) { commands.set(command.name, command) } },
     tools: { register(tool) { tools.set(tool.name, tool) } },
@@ -28,7 +29,7 @@ function fixture() {
     },
   }
   apply(ctx, { fileName: 'delivery.json', boardFile: 'delivery-board.html' })
-  return { tools, commands, skills, exec, files, writes, signal }
+  return { tools, commands, skills, prompts, exec, files, writes, signal }
 }
 
 test('all sixteen tools render desktop-compatible text content blocks', () => {
@@ -38,6 +39,22 @@ test('all sixteen tools render desktop-compatible text content blocks', () => {
     const content = tool.output.render({}, { text: 'test result' })
     assert.deepEqual(content, [{ type: 'text', text: 'test result' }], tool.name)
     assert.equal(content.some((block) => block.type === 'image'), false)
+  }
+})
+
+
+test('systemPrompt and tool descriptions prefer the daily loop', () => {
+  const { tools, prompts } = fixture()
+  const prompt = prompts.find((p) => p.name === 'delivery-board')
+  assert.ok(prompt)
+  assert.match(prompt.text, /Daily loop/)
+  assert.match(prompt.text, /delivery_init, delivery_card, delivery_move/)
+  assert.match(prompt.text, /Advanced \(only when asked\)/)
+  for (const name of ['delivery_init', 'delivery_card', 'delivery_move', 'delivery_board', 'delivery_open', 'delivery_update', 'delivery_weekly', 'delivery_log']) {
+    assert.match(tools.get(name).description, /^Daily:/, name)
+  }
+  for (const name of ['delivery_gate', 'delivery_resolve', 'delivery_board_html', 'delivery_archive', 'delivery_restore', 'delivery_stage_add']) {
+    assert.match(tools.get(name).description, /^Advanced:/, name)
   }
 })
 

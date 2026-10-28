@@ -7,6 +7,31 @@ description: Plan and operate codebase-native delivery using repository requirem
 
 Turn repository context into an actionable delivery plan, then use the installed `delivery_*` tools to maintain the shared delivery state. `/delivery <request>` loads these instructions into the DSH model; it is not a JSON command parser or a shell script.
 
+## First 60s in DSH
+
+1. If there is no project yet, the next step is `/delivery Initialize a lite delivery board for <customer>` (tool: `delivery_init`, prefer template `lite`).
+2. Create one outcome-oriented card (`delivery_card`), or open the board (`delivery_open`) to add cards visually.
+3. Hand off with `delivery_move`, glance with `delivery_board` / `delivery_open`, then `delivery_weekly` when reporting.
+
+`/delivery` = model-led skill (normal). `/delivery-admin` = deterministic escape hatch (no model). Prefer `/delivery` for ordinary work.
+
+## Daily loop (only these)
+
+Use this set for almost all requests:
+
+| Intent | Tool |
+|---|---|
+| Initialize (once) | `delivery_init` — prefer `lite` unless the user asks for `default` / `governance` / custom |
+| Add a card | `delivery_card` |
+| Hand off / change stage | `delivery_move` |
+| Glance / inspect | `delivery_board` |
+| Editable local UI | `delivery_open` |
+| Edit metadata (no move) | `delivery_update` |
+| Weekly client report | `delivery_weekly` |
+| Progress / risk / blocker | `delivery_log` |
+
+Do **not** reach for advanced tools unless the user explicitly asks for pipeline surgery, gate checklists, archive/restore, offline HTML export, or resolving a log by index.
+
 ## Start from the current context
 
 1. Identify the requested outcome: plan a delivery, change existing work, inspect the board, or prepare a report.
@@ -31,18 +56,27 @@ For a new delivery or a substantial re-plan:
 
 Use the current board's IDs and stage IDs, not guessed IDs or display names. Resolve an ambiguous card before mutating it. Preserve work outside the user's request.
 
+Daily tools (prefer these):
+
 | Intent | Tool and boundary |
 |---|---|
 | Create an approved card | `delivery_card`: title, existing stage ID, optional owner/due, acceptance and DoD |
 | Edit card details | `delivery_update`: title, owner, due, acceptance and DoD; moving stage is a separate operation |
 | Hand off work | `delivery_move`: card ID, target stage ID, optional new owner and a concise evidence-based handoff note |
 | Record progress or an issue | `delivery_log`: progress, risk, blocker or decision; associate the card when known |
-| Archive or resume work | `delivery_archive` / `delivery_restore`: archiving keeps history; restore before editing or moving an archived card |
 | Inspect delivery | `delivery_board`: active cards by default; include archives only when needed |
 | Open the editable board | `delivery_open`: return its machine-local URL; this is not a published team URL |
-| Share an offline view | `delivery_board_html`: a read-only HTML snapshot, not a writable board |
 | Prepare the weekly report | `delivery_weekly`: select the reporting period with `week_start`; report includes shipped / handoffs / open risks / risks resolved; `next_week` becomes **Next bets**; `week_label` only changes the heading |
-| Soft WIP on a stage | `delivery_stage_update` / `delivery_stage_add` with `wip_limit` (positive integer). Soft warning only — moves are never blocked |
+
+Advanced (keep available; use only when explicitly needed):
+
+| Intent | Tool and boundary |
+|---|---|
+| Archive or resume work | `delivery_archive` / `delivery_restore`: archiving keeps history; restore before editing or moving an archived card |
+| Share an offline view | `delivery_board_html`: a read-only HTML snapshot, not a writable board |
+| Resolve a risk/blocker by log index | `delivery_resolve` |
+| Toggle a stage gate checklist | `delivery_gate` (trackable; does not block moves) |
+| Soft WIP or pipeline surgery | `delivery_stage_add` / `delivery_stage_update` / `delivery_stage_remove` with optional `wip_limit` |
 
 For an explicit card change, perform the requested tool operation and verify the result; do not require a new overall plan. Before a handoff, distinguish available evidence from unmet criteria or missing sign-off. Gates are human-confirmed/display-only: do not claim a tool enforced them or tests passed unless actual evidence supports that claim. A same-stage owner change is an update, not a new cross-stage handoff.
 

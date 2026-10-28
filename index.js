@@ -68,7 +68,8 @@ export function apply(ctx, config) {
     text: [
       'Codebase-native delivery: use the delivery skill for repository-grounded planning, acceptance criteria, handoffs and reporting.',
       'The /delivery skill is model-led. Load it before delivery task actions when it is available in the skill catalog; explicit /delivery invocations already include its instructions.',
-      'Use the delivery_* tools to read and mutate shared delivery state. /delivery-admin help is the advanced, deterministic command escape hatch, not the normal skill workflow.',
+      'Daily loop (prefer these tools): delivery_init, delivery_card, delivery_move, delivery_board, delivery_open, delivery_update, delivery_weekly, delivery_log. Prefer template lite for new projects.',
+      'Advanced (only when asked): delivery_stage_*, delivery_gate, delivery_resolve, delivery_board_html, delivery_archive, delivery_restore. /delivery-admin help is the deterministic escape hatch, not the normal skill workflow.',
       `Delivery state is stored at the session workspace root (default file ${config.fileName}). ${config.boardFile} is a read-only export; delivery_open returns the editable machine-local board URL.`,
     ].join('\n'),
   })
@@ -76,7 +77,7 @@ export function apply(ctx, config) {
   register(
     defineTool({
       name: 'delivery_init',
-      description: 'Initialize a client delivery project: customer + pipeline template (lite / default / governance) or custom stages',
+      description: 'Daily: initialize delivery project (prefer template lite). Customer + lite/default/governance or custom stages',
       parameters: {
         customer: { type: 'string', description: 'Customer name', required: true },
         template: {
@@ -116,7 +117,7 @@ export function apply(ctx, config) {
   register(
     defineTool({
       name: 'delivery_card',
-      description: 'Add a work card: title, stage, owner, due date, acceptance criteria, DoD',
+      description: 'Daily: add a work card (title, stage, optional owner/due/acceptance/DoD)',
       parameters: {
         title: { type: 'string', description: 'Card title', required: true },
         stage: { type: 'string', description: 'Stage id', required: true },
@@ -138,7 +139,7 @@ export function apply(ctx, config) {
   register(
     defineTool({
       name: 'delivery_move',
-      description: 'Hand a card to another stage (records a handoff audit log; owner can change)',
+      description: 'Daily: hand off a card to another stage (records handoff audit; owner can change)',
       parameters: {
         card_id: { type: 'string', description: 'Card id (e.g. c1)', required: true },
         to_stage: { type: 'string', description: 'Target stage id', required: true },
@@ -166,7 +167,7 @@ export function apply(ctx, config) {
   register(
     defineTool({
       name: 'delivery_board',
-      description: 'Quick text board: cards per stage + gates + soft WIP + open risks',
+      description: 'Daily: quick text board (cards per stage, soft WIP, open risks)',
       parameters: { include_archived: { type: 'boolean', description: 'Include archived cards (default false)' } },
       output: textOutput,
       isConcurrencySafe: () => true,
@@ -180,7 +181,7 @@ export function apply(ctx, config) {
   register(
     defineTool({
       name: 'delivery_board_html',
-      description: 'Export a read-only, offline HTML kanban snapshot; use delivery_open to edit and save in the browser',
+      description: 'Advanced: export read-only offline HTML snapshot; prefer delivery_open to edit live',
       parameters: {
         output: { type: 'string', description: 'Output filename (optional, defaults to delivery-board.html)' },
       },
@@ -205,7 +206,7 @@ export function apply(ctx, config) {
   register(
     defineTool({
       name: 'delivery_log',
-      description: 'Log an update: progress / risk / blocker / decision',
+      description: 'Daily: log progress / risk / blocker / decision',
       parameters: {
         type: { type: 'string', enum: LOG_TYPES, description: 'Update type', required: true },
         text: { type: 'string', description: 'Content', required: true },
@@ -223,7 +224,7 @@ export function apply(ctx, config) {
   register(
     defineTool({
       name: 'delivery_resolve',
-      description: 'Mark an open risk or blocker log entry as resolved by its index in the delivery state logs',
+      description: 'Advanced: mark an open risk/blocker resolved by logs array index',
       parameters: {
         log_index: { type: 'number', description: 'Zero-based index into the logs array', required: true },
       },
@@ -245,7 +246,7 @@ export function apply(ctx, config) {
   register(
     defineTool({
       name: 'delivery_weekly',
-      description: 'Draft the client weekly report (Markdown): pipeline, shipped this week, handoffs, open/resolved risks; optional next bets via next_week',
+      description: 'Daily: draft client weekly Markdown report (shipped / handoffs / risks / optional next bets)',
       parameters: {
         week_label: { type: 'string', description: 'Report title label (optional; does not select the reporting dates)' },
         week_start: { type: 'string', description: 'First reporting date YYYY-MM-DD (inclusive, seven days in local time; defaults to Monday of the current week)' },
@@ -262,7 +263,7 @@ export function apply(ctx, config) {
 
   register(defineTool({
     name: 'delivery_open',
-    description: 'Open an interactive loopback-only board: drag/move/edit/archive/restore/log/gate checklists save to delivery state',
+    description: 'Daily: open interactive local board URL (drag/move/edit; loopback-only)',
     parameters: {}, output: textOutput, isConcurrencySafe: () => false,
     async execute(_args, exec) {
       const url = await boards.open(exec)
@@ -271,7 +272,7 @@ export function apply(ctx, config) {
   }))
 
   register(defineTool({
-    name: 'delivery_update', description: 'Edit active card metadata; omitted fields are preserved',
+    name: 'delivery_update', description: 'Daily: edit active card metadata (title/owner/due/acceptance/DoD); omitted fields preserved',
     parameters: {
       card_id: { type: 'string', required: true, description: 'Card id' },
       title: { type: 'string', description: 'New title' },
@@ -289,7 +290,7 @@ export function apply(ctx, config) {
 
   register(defineTool({
     name: 'delivery_gate',
-    description: 'Toggle or set a stage gate checklist item (trackable; does not block moves)',
+    description: 'Advanced: toggle/set a stage gate checklist item (trackable; does not block moves)',
     parameters: {
       stage_id: { type: 'string', required: true, description: 'Stage id' },
       gate_index: { type: 'number', required: true, description: 'Zero-based index into the stage gates list' },
@@ -310,7 +311,7 @@ export function apply(ctx, config) {
 
   register(defineTool({
     name: 'delivery_stage_add',
-    description: 'Add a pipeline stage after init (marks template custom). Optional after=stage_id to insert.',
+    description: 'Advanced: add a pipeline stage after init (marks template custom). Optional after=stage_id.',
     parameters: {
       name: { type: 'string', required: true, description: 'Stage name' },
       role: { type: 'string', description: 'Owning role' },
@@ -335,7 +336,7 @@ export function apply(ctx, config) {
 
   register(defineTool({
     name: 'delivery_stage_update',
-    description: 'Rename a stage or replace its role / gate labels after init',
+    description: 'Advanced: rename a stage or replace role / gate labels / soft WIP after init',
     parameters: {
       stage_id: { type: 'string', required: true, description: 'Stage id' },
       name: { type: 'string', description: 'New stage name' },
@@ -352,7 +353,7 @@ export function apply(ctx, config) {
 
   register(defineTool({
     name: 'delivery_stage_remove',
-    description: 'Remove a pipeline stage. Refuses if cards remain on it unless migrate_to is set.',
+    description: 'Advanced: remove a pipeline stage (requires migrate_to if cards remain)',
     parameters: {
       stage_id: { type: 'string', required: true, description: 'Stage id to remove' },
       migrate_to: { type: 'string', description: 'Move cards on the removed stage to this stage id first' },
@@ -367,7 +368,7 @@ export function apply(ctx, config) {
   for (const action of ['archive', 'restore']) {
     register(defineTool({
       name: `delivery_${action}`,
-      description: action === 'archive' ? 'Archive a card without deleting its metadata or history' : 'Restore an archived card to its previous stage',
+      description: action === 'archive' ? 'Advanced: archive a card without deleting metadata or history' : 'Advanced: restore an archived card to its previous stage',
       parameters: { card_id: { type: 'string', required: true, description: 'Card id' } },
       output: textOutput, isConcurrencySafe: () => false,
       async execute(args, exec) {

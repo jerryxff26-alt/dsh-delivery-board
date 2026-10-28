@@ -6,7 +6,7 @@
 
 ![Synthetic demo: stage board → drag handoff → calendar Timeline → dark mode → install](docs/demo/demo.gif)
 
-*~25s silent walkthrough of the live board (v0.2.1 UI · English overlays · synthetic data). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
+*~25s silent walkthrough of the live board (v0.2.2 UI · English overlays · synthetic data). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
 
 ## 30-second quickstart
 
@@ -98,6 +98,15 @@ Command shape matches `/delivery-admin` in the DSH plugin. `open` keeps the proc
 
 ## Usage
 
+### Primary path (usual four steps)
+
+1. **Initialize** — `lite` template (or `/delivery Initialize a lite board for ACME`)
+2. **Create a card** — outcome + stage (CLI `card` / `/delivery Add a card…`)
+3. **Hand off** — move across stages (`move` / `/delivery Hand off…`); open the local board when you want drag-and-drop
+4. **Weekly / open** — `weekly` for the client report, `open` for the live board
+
+`/delivery` = model-led skill (normal day-to-day). `/delivery-admin` = deterministic, no-model escape hatch (exact JSON/CLI syntax). Prefer `/delivery` unless you need a scriptable command.
+
 ### Model-led skill (normal workflow)
 
 The plugin bundles and registers a **`delivery` skill**. Type `/delivery` followed by the outcome you want; DSH loads its instructions into the model instead of parsing a direct command. No separate skill copy/install is needed. Plain-language requests can also discover the skill through DSH's skill catalog.
@@ -124,7 +133,7 @@ The former native `/delivery` command is now **`/delivery-admin`**, so it cannot
 ```text
 /delivery-admin help
 /delivery-admin init {"customer":"Demo","template":"lite"}
-/delivery-admin card {"title":"API integration","stage":"build","owner":"Alice"}
+/delivery-admin card {"title":"API integration","stage":"doing","owner":"Alice"}
 /delivery-admin board
 /delivery-admin open
 /delivery-admin move c1 test
@@ -153,22 +162,28 @@ Fully custom stages are supported via the `stages` parameter. Gates are trackabl
 
 ## Tools
 
+**Daily loop** (prefer these):
+
 | Tool | What it does |
 |---|---|
-| `delivery_init` | Initialize a project (customer + template or custom stages) |
+| `delivery_init` | Initialize a project (prefer `lite`; or `default` / `governance` / custom stages) |
 | `delivery_card` | Add a card: title, stage, owner, due date, acceptance criteria, DoD |
 | `delivery_move` | Move a card to another stage (records a handoff; owner can change). Same-stage owner changes are recorded as a decision, not a handoff |
 | `delivery_board` | Quick text board; excludes archived cards unless requested |
-| `delivery_open` | Editable local board URL (drag, create/edit, archive/restore) |
+| `delivery_open` | Editable local board URL (drag, create/edit) |
 | `delivery_update` | Edit title, owner, due, acceptance and DoD without moving |
-| `delivery_archive` | Hide a card without deleting data/history |
-| `delivery_restore` | Return an archived card to its original stage |
-| `delivery_board_html` | Read-only standalone HTML snapshot |
 | `delivery_log` | Log progress / risk / blocker / decision |
+| `delivery_weekly` | Client weekly report (Markdown): shipped / handoffs / open & resolved risks / next bets |
+
+**Advanced** (still registered; use when you explicitly need them):
+
+| Tool | What it does |
+|---|---|
+| `delivery_archive` / `delivery_restore` | Hide a card without deleting history / return it to its original stage |
+| `delivery_board_html` | Read-only standalone HTML snapshot |
 | `delivery_resolve` | Mark an open risk/blocker log entry resolved by index |
 | `delivery_gate` | Toggle/set a stage gate checklist item (trackable, not a hard blocker) |
 | `delivery_stage_add` / `delivery_stage_update` / `delivery_stage_remove` | Evolve the pipeline after init (remove requires `migrate_to` if cards remain; stages accept optional soft `wip_limit`) |
-| `delivery_weekly` | Client weekly report (Markdown): shipped / handoffs / open & resolved risks / next bets |
 
 ## Editable local board vs offline HTML
 
