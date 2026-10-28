@@ -6,7 +6,7 @@
 
 ![Synthetic demo: stage board → drag handoff → calendar Timeline → dark mode → install](docs/demo/demo.gif)
 
-*~25s silent walkthrough of the live board (v0.2.2 UI · English overlays · synthetic data). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
+*~22s silent walkthrough of the live board (v0.3.0 UI · English overlays · synthetic data). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
 
 ## 30-second quickstart
 
