@@ -109,6 +109,8 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 `/delivery` = 模型 skill（日常主入口）。`/delivery-admin` = 不经模型的确定性逃生舱。日常优先 `/delivery`。
 
+**安静看板 / 可日常使用（v0.3.0）：** 打磨冻结。触控仅在 `hover: none` 下显示安静常驻 ⋯ 浮层；桌面仍悬停才出现。Timeline / Archive / 编辑器与近黑·8px·细边语言对齐。归档卡与活动卡同 chrome（标题+元信息；Restore 在 ⋯ 内）。交接审计**只记录真实阶段移动**（A→C 一行；有意跳过的中间阶段不另记）。
+
 **标题+元信息卡片（v0.2.7）：** 看板卡片静止时只显示标题与元信息（负责人/截止/阻塞），不再预留 ID/拖拽/⋯ 顶栏。⋯ 菜单为悬停/聚焦时的绝对浮层；拖拽靠 grab 光标，ID 只留在 aria/编辑/复制。触控截图不再强制露出 chrome。仍无 CDN 字体、无新依赖。
 
 **安静高端 UI（v0.2.6）：** 近黑 Linear 风主按钮（去掉 SaaS 紫）、更扁的 8px 细边卡片、分段控件仅 Active/Timeline/Archive、保存态只留 Saved、副标题缩短为模板·N cards、阻塞改为 meta/左边线、Risks 默认折叠。

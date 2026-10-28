@@ -214,9 +214,11 @@ test('under-board gates, audit and risks stay collapsed by default', () => {
   assert.doesNotMatch(html, /<details class="audit" open>/)
 })
 
-test('v0.2.7 title+meta cards: no face chrome strip, hover menu overlay', () => {
+test('v0.3.0 polish-freeze: title+meta face, touch ⋯ overlay, quiet secondary views', () => {
   let state = sampleState()
   state = appendLog(state, { type: 'blocker', text: 'Waiting', cardId: 'c1' })
+  state = addCard(state, { title: 'Ship notes', stage: 'build', owner: 'dana' })
+  state = archiveCard(state, { cardId: 'c2' })
   const live = renderBoardHtml(state, { endpoint: '/board/test', revision: 'revision' })
   const body = live.split('<script>')[0]
   assert.match(body, /class="card-menu"/)
@@ -224,8 +226,10 @@ test('v0.2.7 title+meta cards: no face chrome strip, hover menu overlay', () => 
   assert.doesNotMatch(body, /class="card-top"/)
   assert.doesNotMatch(body, /class="drag-hint"/)
   assert.match(body, /\.card-menu \{ position: absolute/)
-  assert.doesNotMatch(body, /@media \(hover: none\)/)
-  assert.doesNotMatch(body, /class="card-actions"><button data-action="edit"/)
+  // Touch: quiet always-visible ⋯; desktop stays opacity 0 until hover.
+  assert.match(body, /@media \(hover: none\)/)
+  assert.match(body, /\.card-menu > summary \{ opacity: \.55/)
+  assert.doesNotMatch(body, /class="card-actions"/)
   assert.doesNotMatch(body, /class="card-extras"/)
   assert.doesNotMatch(body, /class="chip/)
   assert.doesNotMatch(body, /\d+ criteria/)
@@ -233,6 +237,7 @@ test('v0.2.7 title+meta cards: no face chrome strip, hover menu overlay', () => 
   assert.match(body, /name="dod"/)
   assert.doesNotMatch(body, /style="--stage:/)
   assert.match(body, /--accent: #171717/)
+  assert.doesNotMatch(body, /#5c6ac4/)
   assert.match(body, /border-radius: var\(--radius\)/)
   assert.match(body, /box-shadow: none/)
   assert.doesNotMatch(body, /class="col-role"/)
@@ -249,4 +254,12 @@ test('v0.2.7 title+meta cards: no face chrome strip, hover menu overlay', () => 
   assert.match(body, /<details class="risks">/)
   assert.doesNotMatch(body, /<details class="risks" open>/)
   assert.doesNotMatch(body, /font-weight: 650/)
+  // Archive cards share title+meta + menu overlay (Restore in ⋯, not a face strip).
+  const archive = renderArchive(state, { interactive: true, query: '', owner: '', archiveLimit: 30, strings: boardStrings() })
+  assert.match(archive, /class="card-menu"/)
+  assert.match(archive, /data-action="restore"/)
+  assert.doesNotMatch(archive, /class="card-actions"/)
+  // Secondary views: no heavy surface panel chrome on archive/timeline wrappers.
+  assert.match(body, /\.archive-panel \{[^}]*background: transparent/)
+  assert.match(body, /\.timeline-panel \{[^}]*background: transparent/)
 })

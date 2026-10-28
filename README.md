@@ -107,6 +107,8 @@ Command shape matches `/delivery-admin` in the DSH plugin. `open` keeps the proc
 
 `/delivery` = model-led skill (normal day-to-day). `/delivery-admin` = deterministic, no-model escape hatch. Prefer `/delivery` unless you need a scriptable command.
 
+**Quiet board / ready for daily use (v0.3.0):** Polish-freeze. Touch gets a quiet always-visible ⋯ overlay (`hover: none` only); desktop stays hover. Timeline + Archive + editor share the same near-black / 8px / hairline language. Archive cards match active chrome (title+meta; Restore in ⋯). Handoff audit logs **only actual stage moves** (A→C is one line; intentional skips are not logged as intermediate hops).
+
 **Title+meta cards (v0.2.7):** Kanban cards at rest show only title and meta (owner/due/blocked) — no reserved ID/drag/⋯ strip. The ⋯ menu is an absolute hover/focus overlay. Cursor grab is the drag affordance; IDs stay in aria/edit/copy. Touch screenshots stay clean (no forced chrome). Zero CDN fonts / no new deps.
 
 **Quiet premium UI (v0.2.6):** Near-black Linear-like primary (no SaaS purple), flatter 8px hairline cards, Active/Timeline/Archive segments without counts, quiet Saved status, short subtitle (template · N cards), blocked as meta/left hairline, Risks collapsed by default.
