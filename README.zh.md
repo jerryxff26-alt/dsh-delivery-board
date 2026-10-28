@@ -109,6 +109,8 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 `/delivery` = 模型 skill（日常主入口）。`/delivery-admin` = 不经模型的确定性逃生舱。日常优先 `/delivery`。
 
+**更克制的看板 UI（v0.2.4）：** 更柔和的配色、细而克制的阶段色条（不再彩虹）、卡片更疏、AC/DoD 默认收成芯片、Edit/Archive/Copy 藏进 ⋯ 菜单、列头更简。仍无 CDN 字体、无新依赖。
+
 **少一点摩擦（v0.2.3）：** 阶段/卡片可用 **id 或名称/标题**（不区分大小写，须唯一；报错列候选项）。支持位置参数：`init ACME lite`、`card API doing Ada`、`move API review`。看板闸门与审计默认折叠；未关闭风险保持可见。
 
 然后在会话里：

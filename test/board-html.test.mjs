@@ -25,7 +25,7 @@ test('renderBoardHtml produces a complete standalone page', () => {
   assert.ok(html.includes('<!DOCTYPE html>'))
   assert.ok(html.includes('ACME &lt;Group&gt; · Delivery Board'))
   assert.ok(html.includes('Governance Pipeline'))
-  assert.ok(html.includes('Copy handoff command'))
+  assert.ok(html.includes('Copy handoff'))
   assert.ok(html.includes('</html>'))
 })
 
@@ -200,4 +200,22 @@ test('gates details are collapsed by default; audit stays collapsed', () => {
   assert.doesNotMatch(html, /<details class="gates" open>/)
   assert.match(html, /<details class="audit">/)
   assert.doesNotMatch(html, /<details class="audit" open>/)
+})
+
+test('v0.2.4 subtractive card chrome: criteria chips + ⋯ menu; muted stage accents', () => {
+  const state = sampleState()
+  const live = renderBoardHtml(state, { endpoint: '/board/test', revision: 'revision' })
+  const body = live.split('<script>')[0]
+  assert.match(body, /class="card-menu"/)
+  assert.match(body, /aria-label="Card actions"/)
+  assert.match(body, /2 criteria|1 criteria|criteria/)
+  assert.match(body, /class="chip chip-quiet"/)
+  assert.doesNotMatch(body, /class="card-actions"><button data-action="edit"/)
+  assert.match(body, /--stage:#6b87b8|--stage:#8a7aa8|--stage:#a88968/)
+  assert.doesNotMatch(body, /--stage:#2563eb/)
+  assert.doesNotMatch(body, /linear-gradient\(180deg, #2563eb/)
+  assert.match(body, /card-extra/)
+  // Gates stay collapsed; role/stage-id demoted from dense headers
+  assert.doesNotMatch(body, /<details class="gates" open>/)
+  assert.match(body, /class="col-role"/)
 })

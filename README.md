@@ -107,6 +107,8 @@ Command shape matches `/delivery-admin` in the DSH plugin. `open` keeps the proc
 
 `/delivery` = model-led skill (normal day-to-day). `/delivery-admin` = deterministic, no-model escape hatch. Prefer `/delivery` unless you need a scriptable command.
 
+**Calmer board UI (v0.2.4):** softer palette, thin muted stage accents (no rainbow), roomier cards, AC/DoD as quiet chips until opened, Edit/Archive/Copy behind a ⋯ menu, simpler column headers. Still zero CDN fonts / no new deps.
+
 **Less friction (v0.2.3):** stages/cards accept **id or name/title** (case-insensitive, unique; errors list candidates). Positional CLI works: `init ACME lite`, `card API doing Ada`, `move API review`. Board gates & audit start collapsed; open risks stay visible.
 
 ### Model-led skill (normal workflow)
