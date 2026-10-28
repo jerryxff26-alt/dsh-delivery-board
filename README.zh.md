@@ -64,7 +64,7 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 - **时间线视图**：按真实日历日期展示每张卡片的甘特条（创建 → 各阶段交接 → 上线 / 归档 / 今天），带“今天”标线、周/月网格线、◆ 截止标记（逾期为红色），没有日期的卡片单独列出。与看板共用搜索和负责人筛选，点击标题即可编辑；浅色/深色主题跟随系统。
 - **离线 HTML 快照**：单个只读文件，没装 DSH 的同事也能打开。
 
-![宽屏完整治理流水线看板（Plan→Live，虚构 ACME 卡片）](docs/screenshots/board.jpg)
+![宽屏简洁四列看板（Lite：Backlog→Live，虚构 ACME 卡片）](docs/screenshots/board.jpg)
 
 ![时间线视图：按日历轴展示各卡片阶段色条，含今天标线、周/月网格线、截止与上线标记](docs/screenshots/timeline.jpg)
 
@@ -109,7 +109,9 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 `/delivery` = 模型 skill（日常主入口）。`/delivery-admin` = 不经模型的确定性逃生舱。日常优先 `/delivery`。
 
-**更克制的看板 UI（v0.2.4）：** 更柔和的配色、细而克制的阶段色条（不再彩虹）、卡片更疏、AC/DoD 默认收成芯片、Edit/Archive/Copy 藏进 ⋯ 菜单、列头更简。仍无 CDN 字体、无新依赖。
+**安静高端 UI（v0.2.5）：** Linear / Things 级克制——单一靛蓝强调色、列头仅阶段名+计数、卡片正面只留标题/负责人/到期、操作悬停才出 ⋯、关卡收进看板下方折叠区、工具栏只留搜索/视图/新建（刷新与记风险进 ⋯）。深色模式同规则。仍无 CDN 字体、无新依赖。
+
+**更克制的看板 UI（v0.2.4）：** 更柔和的配色、细而克制的阶段色条、卡片更疏、AC/DoD 默认收成芯片、Edit/Archive/Copy 藏进 ⋯ 菜单。
 
 **少一点摩擦（v0.2.3）：** 阶段/卡片可用 **id 或名称/标题**（不区分大小写，须唯一；报错列候选项）。支持位置参数：`init ACME lite`、`card API doing Ada`、`move API review`。看板闸门与审计默认折叠；未关闭风险保持可见。
 

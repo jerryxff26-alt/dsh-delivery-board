@@ -35,20 +35,26 @@ test('renderBoardHtml escapes user content (XSS safe)', () => {
   assert.ok(html.includes('&lt;script&gt;alert(1)&lt;/script&gt;'))
 })
 
-test('renderBoardHtml shows stages, gates, risks and audit trail', () => {
+test('renderBoardHtml shows stages, risks and audit trail; gates live under the board', () => {
   const html = renderBoardHtml(sampleState())
   assert.ok(html.includes('Analyze'))
-  assert.ok(html.includes('gate · Acceptance criteria frozen'))
-  assert.ok(html.includes('Open risks / blockers'))
+  assert.ok(html.includes('Acceptance criteria frozen'))
+  assert.ok(html.includes('class="board-gates"'))
+  assert.ok(html.includes('Risks ('))
   assert.ok(html.includes('Understaffed'))
-  assert.ok(html.includes('Handoff audit trail'))
+  assert.ok(html.includes('Activity ·'))
   assert.ok(html.includes('PRD reviewed'))
+  const body = html.split('<script>')[0]
+  assert.doesNotMatch(body, /class="col-role"/)
+  // Column headers are name + count only (gates moved under #board-gates)
+  assert.match(body, /id="board-gates"/)
+  assert.match(body, /class="board-gates"/)
 })
 
 test('renderBoardHtml marks overdue cards', () => {
   const html = renderBoardHtml(sampleState())
+  assert.ok(html.includes('is-overdue'))
   assert.ok(html.includes('overdue'))
-  assert.ok(html.includes('⚠'))
 })
 
 test('renderBoardHtml handles empty projects', () => {
@@ -166,11 +172,13 @@ test('bootstrap data cannot close the script or introduce executable user markup
   assert.doesNotThrow(() => new Script(html.match(/<script>([\s\S]*?)<\/script>/)[1]))
 })
 
-test('live board exposes log risk/blocker UI and hides resolved risks', () => {
+test('live board exposes log risk UI and hides resolved risks', () => {
   let state = sampleState()
   const live = renderBoardHtml(state, { endpoint: '/board/test', revision: 'revision' })
-  assert.match(live, /Log risk \/ blocker/)
+  assert.match(live, /Log risk/)
   assert.match(live, /id="log-dialog"/)
+  assert.match(live, /id="new-log"/)
+  assert.match(live, /class="toolbar-more"/)
   assert.match(live, /Understaffed/)
   assert.match(live, /data-action="resolve"/)
   assert.match(live, /save\('log'/)
@@ -180,7 +188,7 @@ test('live board exposes log risk/blocker UI and hides resolved risks', () => {
   state = resolveLog(state, { index: riskIndex })
   const after = renderBoardHtml(state, { endpoint: '/board/test', revision: 'revision' }).split('<script>')[0]
   assert.doesNotMatch(after, /Understaffed/)
-  assert.doesNotMatch(after, /Open risks \/ blockers/)
+  assert.doesNotMatch(after, /Risks \(/)
   assert.equal(renderRisks(state, true), '')
 })
 
@@ -193,29 +201,34 @@ test('live board renders trackable gate checkboxes', () => {
   assert.match(live.split('<script>')[0], /Delivery state is saved/)
 })
 
-test('gates details are collapsed by default; audit stays collapsed', () => {
+test('under-board gates and audit stay collapsed by default', () => {
   const s = createProject({ customer: 'X', template: 'default' })
   const html = renderBoardHtml(s)
+  assert.match(html, /<details class="board-gates"><summary>/)
+  assert.doesNotMatch(html, /<details class="board-gates" open>/)
   assert.match(html, /<details class="gates"><summary>/)
   assert.doesNotMatch(html, /<details class="gates" open>/)
   assert.match(html, /<details class="audit">/)
   assert.doesNotMatch(html, /<details class="audit" open>/)
 })
 
-test('v0.2.4 subtractive card chrome: criteria chips + ⋯ menu; muted stage accents', () => {
+test('v0.2.5 quiet premium: face is title+owner+due; single accent; no column chrome', () => {
   const state = sampleState()
   const live = renderBoardHtml(state, { endpoint: '/board/test', revision: 'revision' })
   const body = live.split('<script>')[0]
   assert.match(body, /class="card-menu"/)
   assert.match(body, /aria-label="Card actions"/)
-  assert.match(body, /2 criteria|1 criteria|criteria/)
-  assert.match(body, /class="chip chip-quiet"/)
   assert.doesNotMatch(body, /class="card-actions"><button data-action="edit"/)
-  assert.match(body, /--stage:#6b87b8|--stage:#8a7aa8|--stage:#a88968/)
-  assert.doesNotMatch(body, /--stage:#2563eb/)
-  assert.doesNotMatch(body, /linear-gradient\(180deg, #2563eb/)
-  assert.match(body, /card-extra/)
-  // Gates stay collapsed; role/stage-id demoted from dense headers
-  assert.doesNotMatch(body, /<details class="gates" open>/)
-  assert.match(body, /class="col-role"/)
+  // AC/DoD chips gone from the card face (still in edit dialog)
+  assert.doesNotMatch(body, /class="card-extras"/)
+  assert.doesNotMatch(body, /class="chip chip-quiet"/)
+  assert.doesNotMatch(body, /\d+ criteria/)
+  assert.match(body, /name="acceptance"/)
+  assert.match(body, /name="dod"/)
+  // No rainbow stage accents on columns/cards; one indigo accent in CSS
+  assert.doesNotMatch(body, /style="--stage:/)
+  assert.match(body, /--accent: #5c6ac4/)
+  assert.doesNotMatch(body, /class="col-role"/)
+  assert.match(body, /class="toolbar-more"/)
+  assert.match(body, /id="board-gates"/)
 })

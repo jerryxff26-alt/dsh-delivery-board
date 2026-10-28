@@ -64,7 +64,7 @@ If this saves your team a standup or a messy weekly paste, a [⭐ star](https://
 - **Timeline view** — a calendar-axis Gantt of every card: bars follow real dates (created → each stage handoff → shipped / archived / today), with a today line, week and month gridlines, ◆ due markers (red when overdue), and a tray for cards with no dates yet. Same search and owner filters as the kanban; click a title to edit. Light and dark themes follow the OS.
 - **Offline HTML snapshot** — a single read-only file teammates without DSH can open.
 
-![Full-width editable delivery board showing all governance stages Plan→Live with synthetic ACME cards](docs/screenshots/board.jpg)
+![Full-width editable delivery board showing the lite four-column pipeline with synthetic ACME cards](docs/screenshots/board.jpg)
 
 ![Timeline view: calendar-axis bars per card colored by stage, with today line, week/month gridlines, due and shipped markers](docs/screenshots/timeline.jpg)
 
@@ -79,7 +79,7 @@ If this saves your team a standup or a messy weekly paste, a [⭐ star](https://
 
 </details>
 
-*Screenshots captured at a normal laptop viewport (~1440×900) from a synthetic ACME board: denser columns so Plan→Live fit without horizontal scroll when possible.*
+*Screenshots captured at a normal laptop viewport (~1440×900) from a synthetic ACME **lite** board (Backlog → Doing → Review → Live) so the README shows the quiet general-purpose UI.*
 
 ## Standalone CLI
 
@@ -107,7 +107,9 @@ Command shape matches `/delivery-admin` in the DSH plugin. `open` keeps the proc
 
 `/delivery` = model-led skill (normal day-to-day). `/delivery-admin` = deterministic, no-model escape hatch. Prefer `/delivery` unless you need a scriptable command.
 
-**Calmer board UI (v0.2.4):** softer palette, thin muted stage accents (no rainbow), roomier cards, AC/DoD as quiet chips until opened, Edit/Archive/Copy behind a ⋯ menu, simpler column headers. Still zero CDN fonts / no new deps.
+**Quiet premium UI (v0.2.5):** Linear/Things-level calm — one indigo accent, identical quiet columns (name + count only), cards show title + owner + due on the face, actions behind hover ⋯, gates collapsed under the board, toolbar pared to search / view / New card (Refresh + Log risk in ⋯). Dark mode same rules. Zero CDN fonts / no new deps.
+
+**Calmer board UI (v0.2.4):** softer palette, thin muted stage accents, roomier cards, AC/DoD as quiet chips, Edit/Archive/Copy behind a ⋯ menu.
 
 **Less friction (v0.2.3):** stages/cards accept **id or name/title** (case-insensitive, unique; errors list candidates). Positional CLI works: `init ACME lite`, `card API doing Ada`, `move API review`. Board gates & audit start collapsed; open risks stay visible.
 

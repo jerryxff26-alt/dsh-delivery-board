@@ -109,16 +109,19 @@ test('board boot only bakes in an explicit locale so the browser can choose', ()
   assert.match(renderBoardHtml(s, { locale: 'zh-CN' }), /"locale":"zh-CN"/)
 })
 
-test('columns over a WIP limit show a soft, warn-only note', () => {
-  const s = demoState(new Date(NOW))
+test('columns over a WIP limit show a quiet warn-only note (no screaming badge)', () => {
+  let s = createProject({ customer: 'WIP', template: 'lite' })
+  s = { ...s, pipeline: s.pipeline.map((stage) => (stage.id === 'doing' ? { ...stage, wipLimit: 1 } : stage)) }
+  s = addCard(s, { title: 'One', stage: 'doing' })
+  s = addCard(s, { title: 'Two', stage: 'doing' })
   const ui = { interactive: true, query: '', owner: '', limits: {}, strings: boardStrings('en-US') }
   const html = renderColumns(s, ui)
-  assert.match(html, /class="wip over"/)
   assert.match(html, /class="wip-note"/)
-  assert.match(html, /warn only/i)
+  assert.match(html, /Over WIP/)
   assert.equal((html.match(/class="wip-note"/g) ?? []).length, 1)
-  // Every stage column carries its accent color.
-  assert.match(html, new RegExp(`--stage:${stageColor(0)}`))
+  // Quiet columns: no per-stage rainbow style attribute
+  assert.doesNotMatch(html, /style="--stage:/)
+  assert.equal(stageColor(0), stageColor(3))
 })
 
 test('renderCard keeps drag affordances and localized summaries', () => {
@@ -129,7 +132,9 @@ test('renderCard keeps drag affordances and localized summaries', () => {
   assert.match(en, /is-overdue/)
   assert.ok(!HAN.test(en))
   const zh = renderCard(card, s, true, boardStrings('zh-CN'))
-  assert.match(zh, /已逾期/)
+  assert.match(zh, /卡片操作/)
+  assert.match(zh, /class="due overdue"/)
+  assert.ok(HAN.test(zh))
   const shipped = renderCard(s.cards.find((c) => c.id === 'c1'), s, true, boardStrings('en-US'))
   assert.ok(!shipped.includes('is-overdue'))
 })
