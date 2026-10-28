@@ -88,3 +88,11 @@ test('standalone open serves editable board over loopback', async () => {
     await session.close()
   })
 })
+
+test('standalone board without init names one next step', async () => {
+  await withTemp(async (dir) => {
+    const session = createStandaloneSession({ cwd: dir })
+    await assert.rejects(() => session.run('board'), /Next step: init/)
+    await session.close()
+  })
+})

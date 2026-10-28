@@ -52,7 +52,7 @@ const ok = (text) => ({ text })
 async function loadOrThrow(ctx, exec, fileName) {
   const state = await readState(ctx, exec, fileName)
   if (!state) {
-    throw new Error(`No delivery project yet. Initialize one with delivery_init first (data file: ${fileName}).`)
+    throw new Error(`No delivery project yet. Next step: delivery_init (or /delivery Initialize …). Data file: ${fileName}.`)
   }
   return state
 }
@@ -76,13 +76,13 @@ export function apply(ctx, config) {
   register(
     defineTool({
       name: 'delivery_init',
-      description: 'Initialize a client delivery project: customer + pipeline template (default / governance) or custom stages',
+      description: 'Initialize a client delivery project: customer + pipeline template (lite / default / governance) or custom stages',
       parameters: {
         customer: { type: 'string', description: 'Customer name', required: true },
         template: {
           type: 'string',
           enum: Object.keys(TEMPLATES),
-          description: 'Pipeline template: default = ToB delivery pipeline, governance = governance-style pipeline with sign-off gates',
+          description: 'Pipeline template: lite = Backlog→Doing→Review→Live (recommended quickstart); default = ToB; governance = sign-off gates',
         },
         stages: {
           type: 'array',

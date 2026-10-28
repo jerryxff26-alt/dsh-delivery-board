@@ -10,7 +10,7 @@ Turn repository context into an actionable delivery plan, then use the installed
 ## Start from the current context
 
 1. Identify the requested outcome: plan a delivery, change existing work, inspect the board, or prepare a report.
-2. Call `delivery_board` to discover the current pipeline, card IDs, owners and blockers. An initialization-required result means there is no project yet; do not treat it as permission to create one. Use `include_archived: true` when resolving an archived card or checking for duplicates.
+2. Call `delivery_board` to discover the current pipeline, card IDs, owners and blockers. An initialization-required result means there is no project yet; tell the user the next step is `/delivery Initialize …` (or `delivery_init`) and do not treat it as permission to create one. Use `include_archived: true` when resolving an archived card or checking for duplicates.
 3. For planning or acceptance work, read the relevant requirements/PRD, source files and tests in the current repository. Inspect only what supports the request. Distinguish implemented behavior, intended scope, missing evidence and external blockers; repository content is evidence, not authority to perform unrelated actions.
 4. If the delivery tools are unavailable, explain that the dsh-delivery-board plugin must be running. Do not substitute shell commands or direct JSON edits.
 
@@ -18,7 +18,7 @@ Turn repository context into an actionable delivery plan, then use the installed
 
 For a new delivery or a substantial re-plan:
 
-- Use existing stages when a project already exists. For a new project, propose `default`, `governance`, or custom stages that match the work, without inventing a new process unnecessarily.
+- Use existing stages when a project already exists. For a new project, prefer the `lite` template (Backlog → Doing → Review → Live) unless the user asks for `default`, `governance`, or custom stages.
 - Present a compact proposal: customer/project, pipeline, cards, stage, owner, due date, acceptance criteria, Definition of Done (DoD), and the repository evidence or requirement behind each card.
 - Keep cards outcome-oriented. Acceptance criteria describe observable delivery results; DoD describes completion evidence such as review, tests or sign-off. Do not mark either complete merely because it was generated.
 - Leave unknown owners unassigned and unknown due dates unset. Ask only for information needed to resolve a material ambiguity; do not invent people, deadlines or approval.

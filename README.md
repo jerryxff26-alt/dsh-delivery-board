@@ -6,15 +6,15 @@
 
 ![Synthetic demo: stage board → drag handoff → calendar Timeline → dark mode → install](docs/demo/demo.gif)
 
-*~25s silent walkthrough of the live board (v0.2.0 UI · English overlays · synthetic data). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
+*~25s silent walkthrough of the live board (v0.2.1 UI · English overlays · synthetic data). [MP4](docs/demo/demo.mp4) if you prefer download over the inline GIF.*
 
 ## 30-second quickstart
 
 **Standalone (no DeepSeek Harness required):**
 
 ```bash
-npx dsh-delivery-board init '{"customer":"ACME","template":"governance"}'
-npx dsh-delivery-board card '{"title":"API integration","stage":"analyze","owner":"Ada"}'
+npx dsh-delivery-board init '{"customer":"ACME","template":"lite"}'
+npx dsh-delivery-board card '{"title":"API integration","stage":"doing","owner":"Ada"}'
 npx dsh-delivery-board open    # loopback board + Timeline; Ctrl+C to stop
 npx dsh-delivery-board weekly
 ```
@@ -87,7 +87,7 @@ Same domain as the plugin (stages, handoffs, soft WIP, weekly report, local boar
 
 ```bash
 npx dsh-delivery-board help
-npx dsh-delivery-board init '{"customer":"Demo","template":"governance"}'
+npx dsh-delivery-board init '{"customer":"Demo","template":"lite"}'
 npx dsh-delivery-board board
 npx dsh-delivery-board open
 npx dsh-delivery-board weekly 2026-10-20
@@ -123,7 +123,7 @@ The former native `/delivery` command is now **`/delivery-admin`**, so it cannot
 
 ```text
 /delivery-admin help
-/delivery-admin init {"customer":"Demo","template":"governance"}
+/delivery-admin init {"customer":"Demo","template":"lite"}
 /delivery-admin card {"title":"API integration","stage":"build","owner":"Alice"}
 /delivery-admin board
 /delivery-admin open
@@ -145,10 +145,11 @@ For linked desktop development, fully quit and reopen DSH after updating the plu
 
 | Template | Stages | Gates |
 |---|---|---|
+| **`lite` (Lite Pipeline)** — recommended quickstart | Backlog → Doing → Review → Live | None |
 | `default` (ToB Delivery Pipeline) | Client Requirements → BA Analysis → TL Design → Development → Testing → DevSecOps Launch → Live | 1–2 per stage (e.g. acceptance criteria frozen, security scan passed) |
 | `governance` (Governance Pipeline) | Plan → Analyze → Design → Build → Test → Deploy → Live | Quality / risk / security sign-offs (e.g. rollback plan ready) |
 
-Fully custom stages are supported via the `stages` parameter. Gates are trackable checklists (persisted as gateDone); they do not hard-block card moves.
+Fully custom stages are supported via the `stages` parameter. Gates are trackable checklists (persisted as gateDone); they do not hard-block card moves. Prefer `lite` unless you need the longer ToB or governance pipelines.
 
 ## Tools
 
@@ -215,14 +216,22 @@ Drawn from delivery practices that fit an in-repo board without becoming a PM su
 - **Kanban soft WIP** — set `wip_limit` on busy stages so overload is visible.
 - **Weekly shipped / next bets** — Shape Up-flavored cadence: what landed, what burned down, what you are betting on next (still just Markdown + YAML/JSON state).
 
-Proposed next (not in this release): card-level appetite (`small`/`medium`/`big`), Definition of Ready checklist beside DoD, Dual Track discovery↔delivery stage pairing.
+## Won't build
 
-## Roadmap
+Hard product boundary — this stays a local, in-repo delivery board:
 
-- Embed the editable board inside DSH instead of a local URL (standalone CLI shipped in v0.2.0)
-- Enforced (hard) gate checklists that can block moves, multi-project rollup
+- Hard-blocking gates or hard WIP (no process engine)
+- Multi-project / multi-workspace rollup or org portfolio
+- Cloud notifications, email/IM push, accounts, or SSO
+- Custom-field sprawl / multiple issue-type systems
+- Dual Track discovery↔delivery modules, DoR, or appetite as productized methodology packs
+- Realtime multi-user CRDT sync, Gantt resource loading, burn-down suites
+- Promoting every admin subcommand into a first-class agent tool
+
+## Possible later (not promises)
+
+- Embed the editable board inside DSH (standalone CLI already ships)
 - Fuller i18n for reports and tool messages (board chrome already follows browser locale)
-- Optional card appetite / DoR fields (see Practice notes)
 
 ## Known limitations
 
@@ -230,6 +239,7 @@ Proposed next (not in this release): card-level appetite (`small`/`medium`/`big`
 - No Gantt scheduling, automatic bulk archive, hard move-blocking gates/WIP, or realtime multi-user sync.
 - Drag/drop (and Edit → Stage fallback) are checked in a local browser harness; no full keyboard/mobile/WCAG claim.
 - Gate checklists and WIP limits are trackable soft signals only; moving a card does not require gates to be checked or WIP to be under limit.
+- Empty columns and uninitialized projects point at **one** next step (`init` / `delivery_init` / `/delivery …`, or **New card** on the board).
 
 ## License
 

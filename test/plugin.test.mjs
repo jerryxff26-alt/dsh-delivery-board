@@ -50,7 +50,7 @@ test('real desktop defineTool validates arguments before touching state', async 
 test('plugin tools complete init, card, handoff, log, board, HTML and weekly flow', async () => {
   const { tools, exec, files, writes, signal } = fixture()
   const call = (name, args = {}) => tools.get(name).execute(args, exec)
-  await assert.rejects(call('delivery_board'), /delivery_init first/)
+  await assert.rejects(call('delivery_board'), /Next step: delivery_init/)
   await call('delivery_init', { customer: 'Desktop Test', template: 'governance' })
   await assert.rejects(call('delivery_init', { customer: 'Do not overwrite' }), /already exists/)
   await call('delivery_card', { title: 'SSO', stage: 'analyze', owner: 'tester-a', acceptance: ['Supported'], dod: ['Reviewed'] })

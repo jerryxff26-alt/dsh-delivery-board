@@ -6,15 +6,15 @@
 
 ![虚构演示：阶段看板 → 拖拽交接 → 日历时间线 → 深色模式 → 安装](docs/demo/demo.gif)
 
-*约 25 秒无声演示（v0.2.0 界面 · 英文叠字 · 虚构数据）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
+*约 25 秒无声演示（v0.2.1 界面 · 英文叠字 · 虚构数据）。需要下载可看 [MP4](docs/demo/demo.mp4)。*
 
 ## 30 秒快速开始
 
 **独立 CLI（无需 DeepSeek Harness）：**
 
 ```bash
-npx dsh-delivery-board init '{"customer":"ACME","template":"governance"}'
-npx dsh-delivery-board card '{"title":"API integration","stage":"analyze","owner":"Ada"}'
+npx dsh-delivery-board init '{"customer":"ACME","template":"lite"}'
+npx dsh-delivery-board card '{"title":"API integration","stage":"doing","owner":"Ada"}'
 npx dsh-delivery-board open    # 本机看板 + Timeline；Ctrl+C 结束
 npx dsh-delivery-board weekly
 ```
@@ -85,7 +85,7 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 ```bash
 npx dsh-delivery-board help
-npx dsh-delivery-board init '{"customer":"Demo","template":"governance"}'
+npx dsh-delivery-board init '{"customer":"Demo","template":"lite"}'
 npx dsh-delivery-board board
 npx dsh-delivery-board open
 npx dsh-delivery-board weekly 2026-10-20
@@ -103,7 +103,7 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 然后在会话里：
 
 ```text
-/delivery Initialize a governance delivery board for ACME
+/delivery Initialize a lite delivery board for ACME
 /delivery Open the editable board
 ```
 
@@ -115,10 +115,11 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 | 模板 | 阶段 | 关卡 |
 |---|---|---|
+| **`lite`（轻量流水线）** — 推荐快速开始 | Backlog → Doing → Review → Live | 无 |
 | `default`（ToB 交付流水线） | Client Requirements → BA Analysis → TL Design → Development → Testing → DevSecOps Launch → Live | 每阶段 1–2 个（如验收标准冻结、安全扫描通过） |
 | `governance`（治理型交付流水线） | Plan → Analyze → Design → Build → Test → Deploy → Live | 侧重质量/风险/安全签核（如回滚方案就绪） |
 
-可通过 `stages` 参数完全自定义阶段。关卡是**可勾选跟踪的清单**，持久化在交付状态中，**不会强制拦截**卡片移动。
+可通过 `stages` 参数完全自定义阶段。关卡是**可勾选跟踪的清单**，持久化在交付状态中，**不会强制拦截**卡片移动。除非明确需要更长的 ToB / 治理流水线，优先用 `lite`。
 
 ## 工具
 
@@ -179,14 +180,22 @@ DSH_CLI="/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/d
 - **看板软 WIP**：给忙碌阶段设 `wip_limit`，超载一眼可见。
 - **周报 shipped / next bets**：带一点 Shape Up 味道——本周落地了什么、消化了什么风险、下周押什么（仍然只是 Markdown + 仓库内状态）。
 
-拟议下一步（本版未做）：卡片级 appetite（`small`/`medium`/`big`）、与 DoD 并列的 Definition of Ready 清单、Dual Track 发现↔交付阶段配对。
+## 不做清单（Won't build）
 
-## 路线图
+硬产品边界——本项目保持「本地 / 仓内交付看板」：
 
-- 把可编辑看板嵌进 DSH，而不是本地 URL（独立 CLI 已在 v0.2.0 发布）
-- 可强制拦截移动的硬关卡、多项目汇总
+- 硬拦截关卡或硬 WIP（不做流程引擎）
+- 多项目 / 多 workspace 汇总或组织级 portfolio
+- 云端通知、邮件/IM 推送、账号与 SSO
+- 自定义字段泛滥 / 多种 issue type 体系
+- Dual Track 发现↔交付、DoR、appetite 等「方法论模块」对外产品化
+- 实时多人 CRDT 协同、甘特资源负载、燃尽图套件
+- 把每个 admin 子命令都升成一级 Agent 工具
+
+## 可能以后做（非对外承诺）
+
+- 把可编辑看板嵌进 DSH（独立 CLI 已发布）
 - 周报与工具消息的更完整 i18n（看板界面已跟随浏览器语言）
-- 可选卡片 appetite / DoR 字段（见实践说明）
 
 ## 已知限制
 
@@ -194,6 +203,7 @@ DSH_CLI="/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/d
 - 无甘特排期、自动批量归档、硬拦截关卡/WIP，或实时多用户同步。
 - 拖拽（以及编辑 → 阶段回退）在本地浏览器 harness 中检查过；不做完整键盘/移动端/WCAG 声明。
 - 关卡清单与 WIP 上限只是软信号；移动卡片不要求关卡全部勾选，也不要求 WIP 未超限。
+- 空列与未初始化项目只指向**一个**下一步（`init` / `delivery_init` / `/delivery …`，或看板上的「新建卡片」）。
 
 ## 许可证
 

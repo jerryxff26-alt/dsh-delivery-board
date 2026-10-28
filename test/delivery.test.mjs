@@ -43,6 +43,29 @@ test('createProject supports the governance template', () => {
   assert.ok(deploy.gates.includes('Rollback plan ready'))
 })
 
+
+test('createProject supports the lite template (short pipeline, no gates)', () => {
+  const s = createProject({ customer: 'ACME', template: 'lite' })
+  assert.equal(s.template, 'lite')
+  assert.deepEqual(
+    s.pipeline.map((p) => p.id),
+    ['backlog', 'doing', 'review', 'live'],
+  )
+  assert.deepEqual(
+    s.pipeline.map((p) => p.name),
+    ['Backlog', 'Doing', 'Review', 'Live'],
+  )
+  assert.ok(s.pipeline.every((p) => p.gates.length === 0))
+  assert.equal(TEMPLATES.lite.name, 'Lite Pipeline')
+})
+
+test('renderBoard empty columns use actionable copy', () => {
+  const s = createProject({ customer: 'ACME', template: 'lite' })
+  const board = renderBoard(s)
+  assert.match(board, /\(empty — add a card, or drag one here\)/)
+  assert.doesNotMatch(board, /^ {2}\(empty\)$/m)
+})
+
 test('createProject accepts custom stages and rejects bad input', () => {
   const s = createProject({
     customer: 'ACME',

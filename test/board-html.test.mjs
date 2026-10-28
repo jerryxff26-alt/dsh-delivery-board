@@ -52,11 +52,24 @@ test('renderBoardHtml marks overdue cards', () => {
 })
 
 test('renderBoardHtml handles empty projects', () => {
-  const html = renderBoardHtml(createProject({ customer: 'Empty' }))
+  const html = renderBoardHtml(createProject({ customer: 'Empty', template: 'lite' }))
   const body = html.split('<script>')[0]
-  assert.ok(body.includes('(empty)'))
+  // Offline/read-only empty columns use soft emptyReadonly copy (not bare "(empty)").
+  assert.ok(body.includes('No cards in this stage'))
+  assert.ok(!body.includes('(empty)'))
   assert.ok(!body.includes('Open risks'))
   assert.equal(body.includes('id="risks"'), true)
+})
+
+test('live board empty columns emphasize New card', () => {
+  const live = renderBoardHtml(createProject({ customer: 'Empty', template: 'lite' }), {
+    endpoint: '/board/test',
+    revision: 'revision',
+  })
+  const body = live.split('<script>')[0]
+  assert.ok(body.includes('Drop a card here · New card'))
+  assert.ok(body.includes('New card'))
+  assert.ok(body.includes('Lite Pipeline'))
 })
 
 test('offline snapshots are visibly read-only and live boards prioritize drag over card-face stage selects', () => {
