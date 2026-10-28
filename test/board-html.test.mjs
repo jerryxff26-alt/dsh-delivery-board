@@ -80,7 +80,7 @@ test('live board empty columns emphasize New card', () => {
 
 test('offline snapshots are visibly read-only and live boards prioritize drag over card-face stage selects', () => {
   const state = sampleState()
-  assert.match(renderBoardHtml(state), /Read-only HTML snapshot/)
+  assert.match(renderBoardHtml(state), /Read-only/)
   assert.match(renderBoardHtml(state), /draggable="false"/)
   const live = renderBoardHtml(state, { endpoint: '/board/test', revision: 'revision' })
   assert.match(live, /draggable="true"/)
@@ -89,6 +89,7 @@ test('offline snapshots are visibly read-only and live boards prioritize drag ov
   assert.match(live, /Drag to move/)
   assert.match(live, /Board drag-and-drop/)
   assert.match(live, /aria-label="Card stage"/)
+  assert.doesNotMatch(live.split('<script>')[0], /Live local board|Drag a card into another stage/)
   // Stage moves on the card face use drag; no prominent per-card Move-to dropdown.
   const body = live.split('<script>')[0]
   assert.doesNotMatch(body, /class="move-label"/)
@@ -114,7 +115,8 @@ test('large boards render only thirty cards per column initially and expose load
   const markup = renderBoardHtml(state).split('<script>')[0]
   assert.equal((markup.match(/<article class="card/g) ?? []).length, 30)
   assert.match(markup, /Load more \(30\/1000\)/)
-  assert.match(markup, /Active cards \(1000\)/)
+  assert.match(markup, />Active</)
+  assert.match(markup, /1000 cards/)
 })
 
 test('archived cards are not rendered in the initial active view', () => {
@@ -122,7 +124,7 @@ test('archived cards are not rendered in the initial active view', () => {
   state.cards[0].archivedAt = '2026-10-07T03:00:00Z'
   const markup = renderBoardHtml(state).split('<script>')[0]
   assert.equal((markup.match(/<article class="card/g) ?? []).length, 0)
-  assert.match(markup, /Archived \(1\)/)
+  assert.match(markup, />Archive</)
 })
 
 test('English demo data keeps live, read-only and dynamic UI labels free of Chinese characters', () => {
@@ -198,10 +200,10 @@ test('live board renders trackable gate checkboxes', () => {
   assert.match(live, /gate-check/)
   assert.match(live, /data-action="gate"/)
   assert.match(live, /save\('gate'/)
-  assert.match(live.split('<script>')[0], /Delivery state is saved/)
+  assert.doesNotMatch(live.split('<script>')[0], /Delivery state is saved|Drag a card into another stage|board-footer/)
 })
 
-test('under-board gates and audit stay collapsed by default', () => {
+test('under-board gates, audit and risks stay collapsed by default', () => {
   const s = createProject({ customer: 'X', template: 'default' })
   const html = renderBoardHtml(s)
   assert.match(html, /<details class="board-gates"><summary>/)
@@ -212,23 +214,35 @@ test('under-board gates and audit stay collapsed by default', () => {
   assert.doesNotMatch(html, /<details class="audit" open>/)
 })
 
-test('v0.2.5 quiet premium: face is title+owner+due; single accent; no column chrome', () => {
-  const state = sampleState()
+test('v0.2.6 quiet premium: near-black accent, flat cards, quiet chrome', () => {
+  let state = sampleState()
+  state = appendLog(state, { type: 'blocker', text: 'Waiting', cardId: 'c1' })
   const live = renderBoardHtml(state, { endpoint: '/board/test', revision: 'revision' })
   const body = live.split('<script>')[0]
   assert.match(body, /class="card-menu"/)
   assert.match(body, /aria-label="Card actions"/)
   assert.doesNotMatch(body, /class="card-actions"><button data-action="edit"/)
-  // AC/DoD chips gone from the card face (still in edit dialog)
   assert.doesNotMatch(body, /class="card-extras"/)
-  assert.doesNotMatch(body, /class="chip chip-quiet"/)
+  assert.doesNotMatch(body, /class="chip/)
   assert.doesNotMatch(body, /\d+ criteria/)
   assert.match(body, /name="acceptance"/)
   assert.match(body, /name="dod"/)
-  // No rainbow stage accents on columns/cards; one indigo accent in CSS
   assert.doesNotMatch(body, /style="--stage:/)
-  assert.match(body, /--accent: #5c6ac4/)
+  assert.match(body, /--accent: #171717/)
+  assert.match(body, /border-radius: var\(--radius\)/)
+  assert.match(body, /box-shadow: none/)
   assert.doesNotMatch(body, /class="col-role"/)
   assert.match(body, /class="toolbar-more"/)
   assert.match(body, /id="board-gates"/)
+  assert.match(body, />Active</)
+  assert.match(body, />Timeline</)
+  assert.match(body, />Archive</)
+  assert.doesNotMatch(body, /Active cards|Archived \(/)
+  assert.doesNotMatch(body, /last-updated|Updated:/)
+  assert.doesNotMatch(body, /Live local board/)
+  assert.match(body, /class="blocked-meta"/)
+  assert.doesNotMatch(body, /meta-flag/)
+  assert.match(body, /<details class="risks">/)
+  assert.doesNotMatch(body, /<details class="risks" open>/)
+  assert.doesNotMatch(body, /font-weight: 650/)
 })

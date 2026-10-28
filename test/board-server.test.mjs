@@ -44,7 +44,7 @@ test('live board serves only the capability path and uses no-store and browser i
   const f = fixture()
   const page = await f.call({ path: '/board/secret' })
   assert.equal(page.status, 200)
-  assert.match(page.text, /Live local board/)
+  assert.match(page.text, /New card|Delivery Board/)
   assert.match(page.text, /draggable="true"/)
   assert.equal(page.headers['Cache-Control'], 'no-store')
   assert.equal(page.headers['Referrer-Policy'], 'no-referrer')

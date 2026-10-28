@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 
 import { createProject, addCard, archiveCard, moveCard, appendLog } from '../lib/delivery.js'
 import { renderBoardHtml } from '../lib/board-html.js'
-import { boardStrings, cardTimeline, renderTimeline, renderColumns, renderCard, stageColor } from '../lib/board-view.js'
+import { boardStrings, cardTimeline, renderTimeline, renderColumns, renderCard } from '../lib/board-view.js'
 import { demoState } from './fixtures/demo-state.mjs'
 
 const NOW = new Date(2026, 9, 26, 9, 0, 0).getTime() // local Mon 2026-10-26 09:00
@@ -119,9 +119,8 @@ test('columns over a WIP limit show a quiet warn-only note (no screaming badge)'
   assert.match(html, /class="wip-note"/)
   assert.match(html, /Over WIP/)
   assert.equal((html.match(/class="wip-note"/g) ?? []).length, 1)
-  // Quiet columns: no per-stage rainbow style attribute
+  // Quiet columns / timeline: no per-stage rainbow style attribute
   assert.doesNotMatch(html, /style="--stage:/)
-  assert.equal(stageColor(0), stageColor(3))
 })
 
 test('renderCard keeps drag affordances and localized summaries', () => {
@@ -137,4 +136,11 @@ test('renderCard keeps drag affordances and localized summaries', () => {
   assert.ok(HAN.test(zh))
   const shipped = renderCard(s.cards.find((c) => c.id === 'c1'), s, true, boardStrings('en-US'))
   assert.ok(!shipped.includes('is-overdue'))
+})
+
+test('timeline bars use shared accent — no per-stage --stage vars or stage-dot', () => {
+  const { s } = timedState()
+  const html = renderTimeline(s, { interactive: false, query: '', owner: '', locale: 'en-US', strings: boardStrings('en-US'), now: Date.parse('2026-10-28T12:00:00+08:00') })
+  assert.doesNotMatch(html, /style="[^"]*--stage:/)
+  assert.doesNotMatch(html, /stage-dot/)
 })

@@ -107,7 +107,7 @@ Command shape matches `/delivery-admin` in the DSH plugin. `open` keeps the proc
 
 `/delivery` = model-led skill (normal day-to-day). `/delivery-admin` = deterministic, no-model escape hatch. Prefer `/delivery` unless you need a scriptable command.
 
-**Quiet premium UI (v0.2.5):** Linear/Things-level calm — one indigo accent, identical quiet columns (name + count only), cards show title + owner + due on the face, actions behind hover ⋯, gates collapsed under the board, toolbar pared to search / view / New card (Refresh + Log risk in ⋯). Dark mode same rules. Zero CDN fonts / no new deps.
+**Quiet premium UI (v0.2.6):** Near-black Linear-like primary (no SaaS purple), flatter 8px hairline cards, Active/Timeline/Archive segments without counts, quiet Saved status, short subtitle (template · N cards), blocked as meta/left hairline, Risks collapsed by default. Dark mode same rules. Zero CDN fonts / no new deps.
 
 **Calmer board UI (v0.2.4):** softer palette, thin muted stage accents, roomier cards, AC/DoD as quiet chips, Edit/Archive/Copy behind a ⋯ menu.
 

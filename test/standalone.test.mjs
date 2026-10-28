@@ -83,7 +83,7 @@ test('standalone open serves editable board over loopback', async () => {
     assert.equal(res.status, 200)
     const html = await res.text()
     assert.match(html, /SSO/)
-    assert.match(html, /Live local board|draggable/)
+    assert.match(html, /Read-only|Saved|draggable/)
     await opened.close()
     await session.close()
   })

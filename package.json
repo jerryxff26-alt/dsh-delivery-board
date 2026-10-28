@@ -1,6 +1,6 @@
 {
   "name": "dsh-delivery-board",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Codebase-native delivery board: stage pipeline, handoff audit, weekly report, and local Timeline UI. Works as a DeepSeek Harness (dsh) plugin or standalone via npx.",
   "keywords": [
     "dsh-plugin",

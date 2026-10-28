@@ -19,15 +19,15 @@ export function demoState(now = new Date()) {
   const cardTimes = {}
   // Stages: backlog → doing → review → live
   const plan = [
-    { title: 'SSO login (SAML + OIDC)', owner: 'alice', due: 4, created: -18, moves: [['doing', -10]] },
-    { title: 'Order export API', owner: 'bob', due: -2, created: -16, moves: [['doing', -12], ['review', -3]] },
-    { title: 'Inventory sync webhooks', owner: 'alice', due: 9, created: -9, moves: [['doing', -5]] },
-    { title: 'Store locator revamp', owner: 'erin', due: 16, created: -4, moves: [] },
+    { title: 'SSO login (SAML + OIDC)', owner: 'Alice', due: 4, created: -18, moves: [['doing', -10]] },
+    { title: 'Order export API', owner: 'Bob', due: -2, created: -16, moves: [['doing', -12], ['review', -3]] },
+    { title: 'Inventory sync webhooks', owner: 'Alice', due: 9, created: -9, moves: [['doing', -5]] },
+    { title: 'Store locator revamp', owner: 'Erin', due: 16, created: -4, moves: [] },
     { title: 'Data residency review', owner: '', due: null, created: -1, moves: [] },
-    { title: 'Payment failover', owner: 'dave', due: 12, created: -14, moves: [['doing', -8], ['review', -2]] },
-    { title: 'Loyalty points ledger', owner: 'bob', due: -6, created: -28, moves: [['doing', -22], ['review', -14], ['live', -7]] },
-    { title: 'Mobile push notifications', owner: 'carol', due: 2, created: -20, moves: [['doing', -15], ['review', -6]] },
-    { title: 'Legacy CSV importer', owner: 'dave', due: -18, created: -40, moves: [['doing', -34], ['review', -26], ['live', -21]], archive: -14 },
+    { title: 'Payment failover', owner: 'Dave', due: 12, created: -14, moves: [['doing', -8], ['review', -2]] },
+    { title: 'Loyalty points ledger', owner: 'Bob', due: -6, created: -28, moves: [['doing', -22], ['review', -14], ['live', -7]] },
+    { title: 'Mobile push notifications', owner: 'Carol', due: 2, created: -20, moves: [['doing', -15], ['review', -6]] },
+    { title: 'Legacy CSV importer', owner: 'Dave', due: -18, created: -40, moves: [['doing', -34], ['review', -26], ['live', -21]], archive: -14 },
   ]
   plan.forEach((item, i) => {
     s = addCard(s, { title: item.title, stage: 'backlog', owner: item.owner, due: item.due == null ? null : dateOnly(item.due), acceptance: ['Acceptance criteria agreed'], dod: ['Reviewed'] })

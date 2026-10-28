@@ -59,10 +59,9 @@ test('only the advanced command namespace bypasses the model', async () => {
   assert.equal(calls, 0)
 })
 
-test('read-only board guidance and copied handoffs use advanced commands, not skill prompts', () => {
+test('copied handoffs use advanced commands, not skill prompts', () => {
   const state = addCard(createProject({ customer: 'Skill Demo', template: 'governance' }), { title: 'API', stage: 'build' })
   const html = renderBoardHtml(state)
-  assert.match(html, /\/delivery-admin open/)
   assert.match(html, /data-cmd="\/delivery-admin move c1 test"/)
   assert.doesNotMatch(html, /\/delivery (?:open|move|help)/)
 })
