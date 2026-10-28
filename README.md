@@ -107,7 +107,9 @@ Command shape matches `/delivery-admin` in the DSH plugin. `open` keeps the proc
 
 `/delivery` = model-led skill (normal day-to-day). `/delivery-admin` = deterministic, no-model escape hatch. Prefer `/delivery` unless you need a scriptable command.
 
-**Quiet premium UI (v0.2.6):** Near-black Linear-like primary (no SaaS purple), flatter 8px hairline cards, Active/Timeline/Archive segments without counts, quiet Saved status, short subtitle (template · N cards), blocked as meta/left hairline, Risks collapsed by default. Dark mode same rules. Zero CDN fonts / no new deps.
+**Title+meta cards (v0.2.7):** Kanban cards at rest show only title and meta (owner/due/blocked) — no reserved ID/drag/⋯ strip. The ⋯ menu is an absolute hover/focus overlay. Cursor grab is the drag affordance; IDs stay in aria/edit/copy. Touch screenshots stay clean (no forced chrome). Zero CDN fonts / no new deps.
+
+**Quiet premium UI (v0.2.6):** Near-black Linear-like primary (no SaaS purple), flatter 8px hairline cards, Active/Timeline/Archive segments without counts, quiet Saved status, short subtitle (template · N cards), blocked as meta/left hairline, Risks collapsed by default.
 
 **Calmer board UI (v0.2.4):** softer palette, thin muted stage accents, roomier cards, AC/DoD as quiet chips, Edit/Archive/Copy behind a ⋯ menu.
 

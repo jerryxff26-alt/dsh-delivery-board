@@ -109,7 +109,9 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 `/delivery` = 模型 skill（日常主入口）。`/delivery-admin` = 不经模型的确定性逃生舱。日常优先 `/delivery`。
 
-**安静高端 UI（v0.2.6）：** 近黑 Linear 风主按钮（去掉 SaaS 紫）、更扁的 8px 细边卡片、分段控件仅 Active/Timeline/Archive、保存态只留 Saved、副标题缩短为模板·N cards、阻塞改为 meta/左边线、Risks 默认折叠。深色模式同规则。仍无 CDN 字体、无新依赖。
+**标题+元信息卡片（v0.2.7）：** 看板卡片静止时只显示标题与元信息（负责人/截止/阻塞），不再预留 ID/拖拽/⋯ 顶栏。⋯ 菜单为悬停/聚焦时的绝对浮层；拖拽靠 grab 光标，ID 只留在 aria/编辑/复制。触控截图不再强制露出 chrome。仍无 CDN 字体、无新依赖。
+
+**安静高端 UI（v0.2.6）：** 近黑 Linear 风主按钮（去掉 SaaS 紫）、更扁的 8px 细边卡片、分段控件仅 Active/Timeline/Archive、保存态只留 Saved、副标题缩短为模板·N cards、阻塞改为 meta/左边线、Risks 默认折叠。
 
 **更克制的看板 UI（v0.2.4）：** 更柔和的配色、细而克制的阶段色条、卡片更疏、AC/DoD 默认收成芯片、Edit/Archive/Copy 藏进 ⋯ 菜单。
 

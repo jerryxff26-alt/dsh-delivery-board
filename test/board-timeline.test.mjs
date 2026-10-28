@@ -123,12 +123,14 @@ test('columns over a WIP limit show a quiet warn-only note (no screaming badge)'
   assert.doesNotMatch(html, /style="--stage:/)
 })
 
-test('renderCard keeps drag affordances and localized summaries', () => {
+test('renderCard is title+meta with grab drag and localized menu', () => {
   const { s } = timedState()
   const card = s.cards.find((c) => c.id === 'c2')
   const en = renderCard(card, s, true, boardStrings('en-US'))
   assert.match(en, /draggable="true"/)
   assert.match(en, /is-overdue/)
+  assert.doesNotMatch(en, /class="card-top"|class="drag-hint"|class="cid"/)
+  assert.match(en, /class="card-menu"/)
   assert.ok(!HAN.test(en))
   const zh = renderCard(card, s, true, boardStrings('zh-CN'))
   assert.match(zh, /卡片操作/)

@@ -86,7 +86,7 @@ test('offline snapshots are visibly read-only and live boards prioritize drag ov
   assert.match(live, /draggable="true"/)
   assert.match(live, /aria-label="Edit c1"/)
   assert.match(live, /aria-live="polite"/)
-  assert.match(live, /Drag to move/)
+  assert.match(live, /cursor: grab/)
   assert.match(live, /Board drag-and-drop/)
   assert.match(live, /aria-label="Card stage"/)
   assert.doesNotMatch(live.split('<script>')[0], /Live local board|Drag a card into another stage/)
@@ -214,13 +214,17 @@ test('under-board gates, audit and risks stay collapsed by default', () => {
   assert.doesNotMatch(html, /<details class="audit" open>/)
 })
 
-test('v0.2.6 quiet premium: near-black accent, flat cards, quiet chrome', () => {
+test('v0.2.7 title+meta cards: no face chrome strip, hover menu overlay', () => {
   let state = sampleState()
   state = appendLog(state, { type: 'blocker', text: 'Waiting', cardId: 'c1' })
   const live = renderBoardHtml(state, { endpoint: '/board/test', revision: 'revision' })
   const body = live.split('<script>')[0]
   assert.match(body, /class="card-menu"/)
   assert.match(body, /aria-label="Card actions"/)
+  assert.doesNotMatch(body, /class="card-top"/)
+  assert.doesNotMatch(body, /class="drag-hint"/)
+  assert.match(body, /\.card-menu \{ position: absolute/)
+  assert.doesNotMatch(body, /@media \(hover: none\)/)
   assert.doesNotMatch(body, /class="card-actions"><button data-action="edit"/)
   assert.doesNotMatch(body, /class="card-extras"/)
   assert.doesNotMatch(body, /class="chip/)
