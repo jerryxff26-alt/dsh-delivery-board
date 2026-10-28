@@ -12,12 +12,20 @@
 
 **独立 CLI（无需 DeepSeek Harness）：**
 
+在 npm 上架之前，请用 GitHub 安装路径：
+
 ```bash
-npx dsh-delivery-board init ACME lite
-npx dsh-delivery-board card '{"title":"API integration","stage":"doing","owner":"Ada"}'
-npx dsh-delivery-board open    # 本机看板 + Timeline；Ctrl+C 结束
-npx dsh-delivery-board weekly
+npx github:jerryxff26-alt/dsh-delivery-board init ACME lite
+npx github:jerryxff26-alt/dsh-delivery-board card '{"title":"API integration","stage":"doing","owner":"Ada"}'
+npx github:jerryxff26-alt/dsh-delivery-board open    # 本机看板 + Timeline；Ctrl+C 结束
+npx github:jerryxff26-alt/dsh-delivery-board weekly
 ```
+
+| 路径 | 命令 |
+| --- | --- |
+| 独立运行（现在可用） | `npx github:jerryxff26-alt/dsh-delivery-board …` |
+| 独立运行（npm 上架后） | `npx dsh-delivery-board …` |
+| DSH 插件 | `dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board` |
 
 **作为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`）插件**（`/delivery` skill 工作流）：
 
@@ -51,7 +59,7 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 - **Delivery state 是一等公民**：阶段、负责人、验收标准（AC）、完成定义（DoD）、交接与阻塞，都留在仓库里，跟随 Git 演进。
 - **视图解耦**：本地看板、交接审计、客户周报、离线 HTML，都是同一份交付状态的 Projection。
-- **用 CLI 或 DSH 操作**：用 `npx dsh-delivery-board …`、`/delivery` 或自然语言推进阶段、补 AC、记阻塞、出周报；不必把 JSON 当成日常手工编辑界面。
+- **用 CLI 或 DSH 操作**：用 `npx github:jerryxff26-alt/dsh-delivery-board …`（npm 上架后也可用 `npx dsh-delivery-board …`）、`/delivery` 或自然语言推进阶段、补 AC、记阻塞、出周报；不必把 JSON 当成日常手工编辑界面。
 - **边界清晰**：不重造企业级项目管理平台，只把当前仓库交付真正需要的上下文留在 codebase 里。
 
 ## 你能得到什么
@@ -84,13 +92,15 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 与插件共用同一套领域能力（阶段、交接、软 WIP、周报、本地看板 + Timeline）。默认在当前目录读写 `delivery.json`（可用 `--cwd` / `--file` 覆盖）。
 
 ```bash
-npx dsh-delivery-board help
-npx dsh-delivery-board init Demo lite
-npx dsh-delivery-board board
-npx dsh-delivery-board open
-npx dsh-delivery-board weekly 2026-10-20
-npx dsh-delivery-board html
+npx github:jerryxff26-alt/dsh-delivery-board help
+npx github:jerryxff26-alt/dsh-delivery-board init Demo lite
+npx github:jerryxff26-alt/dsh-delivery-board board
+npx github:jerryxff26-alt/dsh-delivery-board open
+npx github:jerryxff26-alt/dsh-delivery-board weekly 2026-10-20
+npx github:jerryxff26-alt/dsh-delivery-board html
 ```
+
+npm 上架后，同样命令可写成 `npx dsh-delivery-board …`。
 
 命令形态与 DSH 插件里的 `/delivery-admin` 一致。`open` 会保持进程直到 Ctrl+C。
 
@@ -225,7 +235,7 @@ DSH_CLI="/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/d
 
 ## 已知限制
 
-- **独立 CLI** 只需 Node ≥20（`npx dsh-delivery-board`）。DSH 插件路径为开发者预览：`engines.dsh >=0.2.0-rc.2 <0.3.0`；peers `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`、`@deepseek-ai/schemastery ~3.18.5`（由宿主提供，optional）。已在 DSH 0.2.1-rc.2 冒烟验证；此前在 0.2.0-rc.2 验证过。
+- **独立 CLI** 只需 Node ≥20（现在用 `npx github:jerryxff26-alt/dsh-delivery-board`；npm 上架后可用 `npx dsh-delivery-board`）。DSH 插件路径为开发者预览：`engines.dsh >=0.2.0-rc.2 <0.3.0`；peers `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`、`@deepseek-ai/schemastery ~3.18.5`（由宿主提供，optional）。已在 DSH 0.2.1-rc.2 冒烟验证；此前在 0.2.0-rc.2 验证过。
 - 无甘特排期、自动批量归档、硬拦截关卡/WIP，或实时多用户同步。
 - 拖拽（以及编辑 → 阶段回退）在本地浏览器 harness 中检查过；不做完整键盘/移动端/WCAG 声明。
 - 关卡清单与 WIP 上限只是软信号；移动卡片不要求关卡全部勾选，也不要求 WIP 未超限。

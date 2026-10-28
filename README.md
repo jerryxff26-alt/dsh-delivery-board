@@ -12,12 +12,20 @@
 
 **Standalone (no DeepSeek Harness required):**
 
+Until the package is on npm, use the GitHub install path:
+
 ```bash
-npx dsh-delivery-board init ACME lite
-npx dsh-delivery-board card '{"title":"API integration","stage":"doing","owner":"Ada"}'
-npx dsh-delivery-board open    # loopback board + Timeline; Ctrl+C to stop
-npx dsh-delivery-board weekly
+npx github:jerryxff26-alt/dsh-delivery-board init ACME lite
+npx github:jerryxff26-alt/dsh-delivery-board card '{"title":"API integration","stage":"doing","owner":"Ada"}'
+npx github:jerryxff26-alt/dsh-delivery-board open    # loopback board + Timeline; Ctrl+C to stop
+npx github:jerryxff26-alt/dsh-delivery-board weekly
 ```
+
+| Path | Command |
+| --- | --- |
+| Standalone (works now) | `npx github:jerryxff26-alt/dsh-delivery-board …` |
+| Standalone (after npm publish) | `npx dsh-delivery-board …` |
+| DSH plugin | `dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board` |
 
 **As a [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) plugin** (skill-backed `/delivery` workflow):
 
@@ -51,7 +59,7 @@ If this saves your team a standup or a messy weekly paste, a [⭐ star](https://
 
 - **Delivery state is a first-class citizen** — stages, owners, acceptance criteria (AC), Definition of Done (DoD), handoffs, and blockers live in the repo and evolve with Git.
 - **Views are projections** — the local board, handoff audit, client weekly report, and offline HTML are all projections of the same delivery state.
-- **Operate via CLI or DSH** — advance stages, fill in AC, log blockers, and generate weekly reports with `npx dsh-delivery-board …`, `/delivery`, or plain language; you do not treat JSON as the day-to-day editing UI.
+- **Operate via CLI or DSH** — advance stages, fill in AC, log blockers, and generate weekly reports with `npx github:jerryxff26-alt/dsh-delivery-board …` (or `npx dsh-delivery-board …` after npm publish), `/delivery`, or plain language; you do not treat JSON as the day-to-day editing UI.
 - **Clear boundaries** — this is not a rebuild of an enterprise project-management platform; it keeps in the codebase only the delivery context the current repo actually needs.
 
 ## What you get
@@ -86,13 +94,15 @@ If this saves your team a standup or a messy weekly paste, a [⭐ star](https://
 Same domain as the plugin (stages, handoffs, soft WIP, weekly report, local board + Timeline). State file defaults to `delivery.json` in the current directory (`--cwd` / `--file` to override).
 
 ```bash
-npx dsh-delivery-board help
-npx dsh-delivery-board init Demo lite
-npx dsh-delivery-board board
-npx dsh-delivery-board open
-npx dsh-delivery-board weekly 2026-10-20
-npx dsh-delivery-board html
+npx github:jerryxff26-alt/dsh-delivery-board help
+npx github:jerryxff26-alt/dsh-delivery-board init Demo lite
+npx github:jerryxff26-alt/dsh-delivery-board board
+npx github:jerryxff26-alt/dsh-delivery-board open
+npx github:jerryxff26-alt/dsh-delivery-board weekly 2026-10-20
+npx github:jerryxff26-alt/dsh-delivery-board html
 ```
+
+After npm publish, the same commands work as `npx dsh-delivery-board …`.
 
 Command shape matches `/delivery-admin` in the DSH plugin. `open` keeps the process alive until Ctrl+C.
 
@@ -260,7 +270,7 @@ Hard product boundary — this stays a local, in-repo delivery board:
 
 ## Known limitations
 
-- **Standalone CLI** needs only Node ≥20 (`npx dsh-delivery-board`). The DSH plugin path is a developer preview: `engines.dsh >=0.2.0-rc.2 <0.3.0`; peers `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`, `@deepseek-ai/schemastery ~3.18.5` (host-provided, optional). Smoke-tested on DSH 0.2.1-rc.2; previously verified on 0.2.0-rc.2.
+- **Standalone CLI** needs only Node ≥20 (`npx github:jerryxff26-alt/dsh-delivery-board` now; `npx dsh-delivery-board` after npm publish). The DSH plugin path is a developer preview: `engines.dsh >=0.2.0-rc.2 <0.3.0`; peers `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`, `@deepseek-ai/schemastery ~3.18.5` (host-provided, optional). Smoke-tested on DSH 0.2.1-rc.2; previously verified on 0.2.0-rc.2.
 - No Gantt scheduling, automatic bulk archive, hard move-blocking gates/WIP, or realtime multi-user sync.
 - Drag/drop (and Edit → Stage fallback) are checked in a local browser harness; no full keyboard/mobile/WCAG claim.
 - Gate checklists and WIP limits are trackable soft signals only; moving a card does not require gates to be checked or WIP to be under limit.
