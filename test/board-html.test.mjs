@@ -192,3 +192,12 @@ test('live board renders trackable gate checkboxes', () => {
   assert.match(live, /save\('gate'/)
   assert.match(live.split('<script>')[0], /Delivery state is saved/)
 })
+
+test('gates details are collapsed by default; audit stays collapsed', () => {
+  const s = createProject({ customer: 'X', template: 'default' })
+  const html = renderBoardHtml(s)
+  assert.match(html, /<details class="gates"><summary>/)
+  assert.doesNotMatch(html, /<details class="gates" open>/)
+  assert.match(html, /<details class="audit">/)
+  assert.doesNotMatch(html, /<details class="audit" open>/)
+})

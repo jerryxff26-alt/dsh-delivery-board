@@ -12,16 +12,18 @@ Usage:
 
 Commands (same shape as /delivery-admin in the DSH plugin):
   help
-  init {"customer":"ACME","template":"governance"}
-  card {"title":"API","stage":"build","owner":"Alice"}
+  init <customer> [template]              # e.g. init ACME lite
+  init {"customer":"ACME","template":"lite"}
+  card <title> <stage> [owner]            # e.g. card API doing Ada
+  card {"title":"API","stage":"doing","owner":"Alice"}
   board [--archived]
-  open                          # local editable board (Ctrl+C to stop)
-  move <card_id> <stage_id>
+  open                                    # local editable board (Ctrl+C to stop)
+  move <card|title> <stage|name>          # e.g. move API review
   update {"card_id":"c1","owner":"Bob"}
-  archive <card_id> | restore <card_id>
+  archive <card|title> | restore <card|title>
   log {"type":"blocker","text":"..."}
   resolve <log_index>
-  gate <stage_id> <gate_index> [true|false]
+  gate <stage|name> <gate_index> [true|false]
   stage_add|stage_update|stage_remove {...}
   weekly [YYYY-MM-DD] | {"week_start":"...","next_week":"..."}
   html

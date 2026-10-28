@@ -20,6 +20,7 @@ import {
   wipWarnings,
   LOG_TYPES,
   TEMPLATES,
+  resolveStageRef,
 } from './lib/delivery.js'
 import { renderBoardHtml } from './lib/board-html.js'
 import { readState, initializeState, mutateState, resolveTarget } from './lib/store.js'
@@ -120,7 +121,7 @@ export function apply(ctx, config) {
       description: 'Daily: add a work card (title, stage, optional owner/due/acceptance/DoD)',
       parameters: {
         title: { type: 'string', description: 'Card title', required: true },
-        stage: { type: 'string', description: 'Stage id', required: true },
+        stage: { type: 'string', description: 'Stage id or name (case-insensitive; must be unique)', required: true },
         owner: { type: 'string', description: 'Owner (optional)' },
         due: { type: 'string', description: 'Due date YYYY-MM-DD (optional)' },
         acceptance: { type: 'array', items: { type: 'string' }, description: 'Acceptance criteria (optional)' },
@@ -141,8 +142,8 @@ export function apply(ctx, config) {
       name: 'delivery_move',
       description: 'Daily: hand off a card to another stage (records handoff audit; owner can change)',
       parameters: {
-        card_id: { type: 'string', description: 'Card id (e.g. c1)', required: true },
-        to_stage: { type: 'string', description: 'Target stage id', required: true },
+        card_id: { type: 'string', description: 'Card id or unique title', required: true },
+        to_stage: { type: 'string', description: 'Target stage id or name', required: true },
         owner: { type: 'string', description: 'New owner after handoff (optional)' },
         note: { type: 'string', description: 'Handoff note (optional)' },
       },
@@ -157,7 +158,8 @@ export function apply(ctx, config) {
         })
         if (!moved) return ok(`No changes: ${args.card_id} is already in ${args.to_stage}.`)
         const last = next.logs[next.logs.length - 1]
-        const warn = wipWarnings(next).filter((w) => w.includes(`(${args.to_stage})`))
+        const movedCard = last?.cardId ? next.cards.find((c) => c.id === last.cardId) : null
+        const warn = wipWarnings(next).filter((w) => movedCard && w.includes(`(${movedCard.stage})`))
         const base = last.type === 'handoff' ? `Handed off: ${last.text}` : `Updated (no handoff): ${last.text}`
         return ok(warn.length ? `${base}\nSoft WIP warning: ${warn.join('; ')}` : base)
       },
@@ -274,7 +276,7 @@ export function apply(ctx, config) {
   register(defineTool({
     name: 'delivery_update', description: 'Daily: edit active card metadata (title/owner/due/acceptance/DoD); omitted fields preserved',
     parameters: {
-      card_id: { type: 'string', required: true, description: 'Card id' },
+      card_id: { type: 'string', required: true, description: 'Card id or unique title' },
       title: { type: 'string', description: 'New title' },
       owner: { type: 'string', description: 'New owner; empty string clears' },
       due: { type: 'string', description: 'New due date YYYY-MM-DD; empty string clears' },
@@ -292,7 +294,7 @@ export function apply(ctx, config) {
     name: 'delivery_gate',
     description: 'Advanced: toggle/set a stage gate checklist item (trackable; does not block moves)',
     parameters: {
-      stage_id: { type: 'string', required: true, description: 'Stage id' },
+      stage_id: { type: 'string', required: true, description: 'Stage id or name' },
       gate_index: { type: 'number', required: true, description: 'Zero-based index into the stage gates list' },
       done: { type: 'boolean', description: 'Explicit checked state; omit to toggle' },
     },
@@ -300,12 +302,14 @@ export function apply(ctx, config) {
     async execute(args, exec) {
       if (!Number.isInteger(args.gate_index) || args.gate_index < 0) throw new Error('gate_index must be a non-negative integer')
       let label
+      let stageId
       await mutateState(ctx, exec, config.fileName, (state) => {
-        const stage = state.pipeline.find((s) => s.id === args.stage_id)
-        label = stage?.gates?.[args.gate_index]
-        return applyAction(state, 'gate', args)
+        const stage = resolveStageRef(state, args.stage_id)
+        stageId = stage.id
+        label = stage.gates?.[args.gate_index]
+        return applyAction(state, 'gate', { ...args, stage_id: stageId })
       })
-      return ok(`Gate updated on ${args.stage_id}: ${label ?? args.gate_index}`)
+      return ok(`Gate updated on ${stageId}: ${label ?? args.gate_index}`)
     },
   }))
 
@@ -338,7 +342,7 @@ export function apply(ctx, config) {
     name: 'delivery_stage_update',
     description: 'Advanced: rename a stage or replace role / gate labels / soft WIP after init',
     parameters: {
-      stage_id: { type: 'string', required: true, description: 'Stage id' },
+      stage_id: { type: 'string', required: true, description: 'Stage id or name' },
       name: { type: 'string', description: 'New stage name' },
       role: { type: 'string', description: 'New owning role' },
       gates: { type: 'array', items: { type: 'string' }, description: 'Replace gate checklist labels (check state kept by index)' },
@@ -355,8 +359,8 @@ export function apply(ctx, config) {
     name: 'delivery_stage_remove',
     description: 'Advanced: remove a pipeline stage (requires migrate_to if cards remain)',
     parameters: {
-      stage_id: { type: 'string', required: true, description: 'Stage id to remove' },
-      migrate_to: { type: 'string', description: 'Move cards on the removed stage to this stage id first' },
+      stage_id: { type: 'string', required: true, description: 'Stage id or name to remove' },
+      migrate_to: { type: 'string', description: 'Move cards on the removed stage to this stage id/name first' },
     },
     output: textOutput, isConcurrencySafe: () => false,
     async execute(args, exec) {
@@ -369,7 +373,7 @@ export function apply(ctx, config) {
     register(defineTool({
       name: `delivery_${action}`,
       description: action === 'archive' ? 'Advanced: archive a card without deleting metadata or history' : 'Advanced: restore an archived card to its previous stage',
-      parameters: { card_id: { type: 'string', required: true, description: 'Card id' } },
+      parameters: { card_id: { type: 'string', required: true, description: 'Card id or unique title' } },
       output: textOutput, isConcurrencySafe: () => false,
       async execute(args, exec) {
         await mutateState(ctx, exec, config.fileName, (state) => applyAction(state, action, args))

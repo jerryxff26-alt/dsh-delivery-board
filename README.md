@@ -13,7 +13,7 @@
 **Standalone (no DeepSeek Harness required):**
 
 ```bash
-npx dsh-delivery-board init '{"customer":"ACME","template":"lite"}'
+npx dsh-delivery-board init ACME lite
 npx dsh-delivery-board card '{"title":"API integration","stage":"doing","owner":"Ada"}'
 npx dsh-delivery-board open    # loopback board + Timeline; Ctrl+C to stop
 npx dsh-delivery-board weekly
@@ -87,7 +87,7 @@ Same domain as the plugin (stages, handoffs, soft WIP, weekly report, local boar
 
 ```bash
 npx dsh-delivery-board help
-npx dsh-delivery-board init '{"customer":"Demo","template":"lite"}'
+npx dsh-delivery-board init Demo lite
 npx dsh-delivery-board board
 npx dsh-delivery-board open
 npx dsh-delivery-board weekly 2026-10-20
@@ -105,7 +105,9 @@ Command shape matches `/delivery-admin` in the DSH plugin. `open` keeps the proc
 3. **Hand off** — move across stages (`move` / `/delivery Hand off…`); open the local board when you want drag-and-drop
 4. **Weekly / open** — `weekly` for the client report, `open` for the live board
 
-`/delivery` = model-led skill (normal day-to-day). `/delivery-admin` = deterministic, no-model escape hatch (exact JSON/CLI syntax). Prefer `/delivery` unless you need a scriptable command.
+`/delivery` = model-led skill (normal day-to-day). `/delivery-admin` = deterministic, no-model escape hatch. Prefer `/delivery` unless you need a scriptable command.
+
+**Less friction (v0.2.3):** stages/cards accept **id or name/title** (case-insensitive, unique; errors list candidates). Positional CLI works: `init ACME lite`, `card API doing Ada`, `move API review`. Board gates & audit start collapsed; open risks stay visible.
 
 ### Model-led skill (normal workflow)
 
@@ -132,11 +134,11 @@ The former native `/delivery` command is now **`/delivery-admin`**, so it cannot
 
 ```text
 /delivery-admin help
-/delivery-admin init {"customer":"Demo","template":"lite"}
-/delivery-admin card {"title":"API integration","stage":"doing","owner":"Alice"}
+/delivery-admin init Demo lite
+/delivery-admin card "API integration" doing Alice
 /delivery-admin board
 /delivery-admin open
-/delivery-admin move c1 test
+/delivery-admin move "API integration" review
 /delivery-admin update {"card_id":"c1","owner":"Bob","due":"2026-10-20"}
 /delivery-admin archive c1
 /delivery-admin restore c1

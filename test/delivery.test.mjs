@@ -617,3 +617,36 @@ test('weekly report lists shipped, risk burn-down and next bets', () => {
   assert.match(empty, /## Risks resolved this week\n- none/)
   assert.doesNotMatch(empty, /## Next bets/)
 })
+
+test('resolve stage by name (case-insensitive) and list candidates on miss', () => {
+  const s = createProject({ customer: 'X', template: 'lite' })
+  const withCard = addCard(s, { title: 'API', stage: 'Doing' })
+  assert.equal(withCard.cards[0].stage, 'doing')
+  const moved = moveCard(withCard, { cardId: 'API', toStage: 'review' })
+  assert.equal(moved.cards[0].stage, 'review')
+  assert.equal(moved.logs.at(-1).cardId, 'c1')
+  assert.throws(() => addCard(s, { title: 'x', stage: 'nope' }), /Candidates:/)
+  assert.throws(() => moveCard(withCard, { cardId: 'missing', toStage: 'doing' }), /Candidates:/)
+})
+
+test('ambiguous card title lists matches', () => {
+  let s = createProject({ customer: 'X', template: 'lite' })
+  s = addCard(s, { title: 'Dup', stage: 'backlog' })
+  s = addCard(s, { title: 'Dup', stage: 'doing' })
+  assert.throws(() => moveCard(s, { cardId: 'Dup', toStage: 'review' }), /ambiguous card/)
+})
+
+test('stage after=name and migrate_to=name resolve', () => {
+  let s = createProject({ customer: 'X', template: 'lite' })
+  s = addCard(s, { title: 'A', stage: 'doing' })
+  s = addStage(s, { name: 'Hardening', after: 'Doing', gates: ['Scan'] })
+  assert.ok(s.pipeline.some((x) => x.name === 'Hardening'))
+  const doingIdx = s.pipeline.findIndex((x) => x.id === 'doing')
+  assert.equal(s.pipeline[doingIdx + 1].name, 'Hardening')
+  const hid = s.pipeline.find((x) => x.name === 'Hardening').id
+  s = moveCard(s, { cardId: 'A', toStage: 'Hardening' })
+  assert.equal(s.cards.find((c) => c.title === 'A').stage, hid)
+  s = removeStage(s, { stageId: 'Hardening', migrateTo: 'Doing' })
+  assert.ok(!s.pipeline.some((x) => x.name === 'Hardening'))
+  assert.equal(s.cards.find((c) => c.title === 'A').stage, 'doing')
+})

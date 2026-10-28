@@ -13,7 +13,7 @@
 **独立 CLI（无需 DeepSeek Harness）：**
 
 ```bash
-npx dsh-delivery-board init '{"customer":"ACME","template":"lite"}'
+npx dsh-delivery-board init ACME lite
 npx dsh-delivery-board card '{"title":"API integration","stage":"doing","owner":"Ada"}'
 npx dsh-delivery-board open    # 本机看板 + Timeline；Ctrl+C 结束
 npx dsh-delivery-board weekly
@@ -85,7 +85,7 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 
 ```bash
 npx dsh-delivery-board help
-npx dsh-delivery-board init '{"customer":"Demo","template":"lite"}'
+npx dsh-delivery-board init Demo lite
 npx dsh-delivery-board board
 npx dsh-delivery-board open
 npx dsh-delivery-board weekly 2026-10-20
@@ -108,6 +108,8 @@ dsh plugin --profile web add github:jerryxff26-alt/dsh-delivery-board
 4. **周报 / 开看板** — `weekly` / `open`
 
 `/delivery` = 模型 skill（日常主入口）。`/delivery-admin` = 不经模型的确定性逃生舱。日常优先 `/delivery`。
+
+**少一点摩擦（v0.2.3）：** 阶段/卡片可用 **id 或名称/标题**（不区分大小写，须唯一；报错列候选项）。支持位置参数：`init ACME lite`、`card API doing Ada`、`move API review`。看板闸门与审计默认折叠；未关闭风险保持可见。
 
 然后在会话里：
 

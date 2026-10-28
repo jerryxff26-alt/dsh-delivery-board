@@ -21,10 +21,22 @@ test('slash command supports discoverable help, precise move and archive syntax'
   )
   assert.throws(() => parseDeliveryCommand('resolve'), /resolve <log_index>/)
   assert.throws(() => parseDeliveryCommand('resolve c1'), /resolve <log_index>/)
-  assert.throws(() => parseDeliveryCommand('gate build'), /gate <stage_id>/)
+  assert.throws(() => parseDeliveryCommand('gate build'), /gate <stage/)
 })
 
 test('slash command keeps JSON strings intact and never interprets shell syntax', () => {
   assert.deepEqual(parseDeliveryCommand('card {"title":"A ; B", "stage":"build"}').args, { title: 'A ; B', stage: 'build' })
   for (const input of ['unknown', 'move c1', 'move c1 build ; rm', 'archive c1 c2', 'board anything', 'open more', 'init []', 'card null', 'update {bad}']) assert.throws(() => parseDeliveryCommand(input))
+})
+
+test('positional init and card parse without JSON', () => {
+  assert.deepEqual(parseDeliveryCommand('init ACME lite'), { action: 'init', args: { customer: 'ACME', template: 'lite' } })
+  assert.deepEqual(parseDeliveryCommand('init ACME Corp governance'), { action: 'init', args: { customer: 'ACME Corp', template: 'governance' } })
+  assert.deepEqual(parseDeliveryCommand('init Demo'), { action: 'init', args: { customer: 'Demo' } })
+  assert.deepEqual(parseDeliveryCommand('card API doing Ada'), { action: 'card', args: { title: 'API', stage: 'doing', owner: 'Ada' } })
+  assert.deepEqual(parseDeliveryCommand('card API doing'), { action: 'card', args: { title: 'API', stage: 'doing' } })
+  assert.deepEqual(parseDeliveryCommand('card "Pay wall" review Bob'), { action: 'card', args: { title: 'Pay wall', stage: 'review', owner: 'Bob' } })
+  assert.deepEqual(parseDeliveryCommand('move "Pay wall" Live'), { action: 'move', args: { card_id: 'Pay wall', to_stage: 'Live' } })
+  assert.deepEqual(parseDeliveryCommand('archive "Pay wall"'), { action: 'archive', args: { card_id: 'Pay wall' } })
+  assert.deepEqual(parseDeliveryCommand('gate "In progress" 0 true'), { action: 'gate', args: { stage_id: 'In progress', gate_index: 0, done: true } })
 })
